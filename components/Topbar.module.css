@@ -1,0 +1,124 @@
+.topbar {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 68px;
+  padding: 0 28px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-page);
+}
+
+.menuButton {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-raised);
+  color: var(--text-secondary);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 17px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-subtle);
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.pillIcon {
+  display: inline-flex;
+  color: var(--accent-amber);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.iconButton:hover {
+  color: var(--text-primary);
+}
+
+/* ikona mowy — główny skrót w prawym górnym rogu */
+.voice {
+  background: var(--accent-blue-soft);
+  border-color: transparent;
+  color: var(--accent-blue);
+}
+
+.voice:hover {
+  color: var(--accent-blue);
+  filter: brightness(1.04);
+}
+
+.voiceActive {
+  background: color-mix(in srgb, var(--accent-red) 16%, var(--surface-raised));
+  color: var(--accent-red);
+}
+
+.login {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 11px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.14s ease;
+}
+
+.login:hover {
+  background: var(--surface-raised);
+}
+
+@media (max-width: 1024px) {
+  .menuButton {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    padding: 0 14px;
+    gap: 8px;
+  }
+
+  .pill {
+    display: none;
+  }
+
+  .loginLabel {
+    display: none;
+  }
+
+  .login {
+    padding: 0 12px;
+  }
+}

@@ -1,0 +1,36 @@
+/* Ikona wynika z aktywnego motywu — bez stanu w Reakcie, więc nie ma migania
+   przy hydracji. */
+
+.sun {
+  display: none;
+}
+
+.moon {
+  display: inline-flex;
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(html:not([data-theme="light"])) .sun {
+    display: inline-flex;
+  }
+
+  :global(html:not([data-theme="light"])) .moon {
+    display: none;
+  }
+}
+
+:global(html[data-theme="dark"]) .sun {
+  display: inline-flex;
+}
+
+:global(html[data-theme="dark"]) .moon {
+  display: none;
+}
+
+:global(html[data-theme="light"]) .sun {
+  display: none;
+}
+
+:global(html[data-theme="light"]) .moon {
+  display: inline-flex;
+}

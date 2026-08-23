@@ -1,49 +1,269 @@
+/* ==========================================================================
+   Design tokens — 1:1 z kolekcją "Theme" w Figmie (tryby Light / Dark)
+   ========================================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-page: #f2ece2;
+  --wall-top: #efe7da;
+  --wall-bottom: #e1d5c2;
+
+  --surface-card: #ffffff;
+  --surface-sidebar: #eae2d5;
+  --surface-raised: #f7f2ea;
+  --surface-sunken: #e5dbca;
+
+  --border-subtle: #d8ccb8;
+  --border-strong: #bfb199;
+
+  --text-primary: #1c2430;
+  --text-secondary: #6a6151;
+  --text-muted: #968b78;
+  --text-inverse: #ffffff;
+
+  --accent-brand: #1b2e4f;
+  --accent-blue: #2f62b8;
+  --accent-blue-soft: #dce7f8;
+  --accent-amber: #c77f26;
+  --accent-red: #a5140f;
+
+  /* scenografia okienka */
+  --casing: #c4b195;
+  --casing-lit: #dccdb4;
+  --casing-shade: #9a876b;
+  --sill: #d3c2a6;
+  --sill-face: #b3a184;
+
+  --room-wall: #4a3f2e;
+  --room-wall-dark: #33291b;
+  --room-shelf: #6b5a40;
+  --room-shelf-dark: #4a3d28;
+  --room-counter: #5a4a32;
+  --room-counter-top: #7a6746;
+  --room-board: #3e3222;
+  --room-paper: #e8dfc8;
+
+  --lamp: #c9873a;
+  --lamp-lit: #f2ce8e;
+  --glow: #f5c066;
+  --glow-strength: 0.2;
+  --sheen: #ffffff;
+  --sheen-strength: 0.1;
+  --note: #e9d48a;
+
+  --shadow-a: 0.16;
+  --scene-shadow-a: 0.18;
+
+  /* grzbiety segregatorów */
+  --bind-0: #b5542f;
+  --bind-1: #8a6e3a;
+  --bind-2: #3e5a78;
+  --bind-3: #7a8c5a;
+  --bind-4: #c8b48a;
+  --bind-5: #9a3b32;
+  --bind-6: #5c6b7a;
+  --bind-7: #d2c3a2;
+  --bind-8: #6e4c2e;
+  --bind-9: #a8894f;
+
+  --sidebar-w: 288px;
+  --radius-card: 18px;
+  --ring: 0 0 0 3px color-mix(in srgb, var(--accent-blue) 30%, transparent);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    --bg-page: #0e131e;
+    --wall-top: #151c2b;
+    --wall-bottom: #0a0e17;
+
+    --surface-card: #1a2231;
+    --surface-sidebar: #111827;
+    --surface-raised: #232c3d;
+    --surface-sunken: #0d121c;
+
+    --border-subtle: #2a3446;
+    --border-strong: #3a465c;
+
+    --text-primary: #ece6dc;
+    --text-secondary: #9ba5b5;
+    --text-muted: #6b7686;
+    --text-inverse: #0e131e;
+
+    --accent-brand: #7ba7e8;
+    --accent-blue: #6f9fe8;
+    --accent-blue-soft: #1e2c46;
+    --accent-amber: #f0b45c;
+    --accent-red: #d9463f;
+
+    --casing: #28324a;
+    --casing-lit: #39465f;
+    --casing-shade: #1a2233;
+    --sill: #303b52;
+    --sill-face: #212b3e;
+
+    --room-wall: #1c2434;
+    --room-wall-dark: #121a28;
+    --room-shelf: #33405a;
+    --room-shelf-dark: #232e42;
+    --room-counter: #26304a;
+    --room-counter-top: #3a4763;
+    --room-board: #1b2434;
+    --room-paper: #c9cfd9;
+
+    --lamp: #8a6a3a;
+    --lamp-lit: #f0c888;
+    --glow: #f0b45c;
+    --glow-strength: 0.16;
+    --sheen: #bbd3f5;
+    --sheen-strength: 0.07;
+    --note: #c9a94e;
+
+    --shadow-a: 0.55;
+    --scene-shadow-a: 0.5;
+
+    --bind-0: #7e4a38;
+    --bind-1: #6b5a3a;
+    --bind-2: #3e5a82;
+    --bind-3: #4e6b58;
+    --bind-4: #8a7e68;
+    --bind-5: #8a3f3a;
+    --bind-6: #4a5a70;
+    --bind-7: #6e6552;
+    --bind-8: #5a4438;
+    --bind-9: #7a6a48;
   }
 }
 
-html {
-  height: 100%;
+:root[data-theme="dark"] {
+  --bg-page: #0e131e;
+  --wall-top: #151c2b;
+  --wall-bottom: #0a0e17;
+
+  --surface-card: #1a2231;
+  --surface-sidebar: #111827;
+  --surface-raised: #232c3d;
+  --surface-sunken: #0d121c;
+
+  --border-subtle: #2a3446;
+  --border-strong: #3a465c;
+
+  --text-primary: #ece6dc;
+  --text-secondary: #9ba5b5;
+  --text-muted: #6b7686;
+  --text-inverse: #0e131e;
+
+  --accent-brand: #7ba7e8;
+  --accent-blue: #6f9fe8;
+  --accent-blue-soft: #1e2c46;
+  --accent-amber: #f0b45c;
+  --accent-red: #d9463f;
+
+  --casing: #28324a;
+  --casing-lit: #39465f;
+  --casing-shade: #1a2233;
+  --sill: #303b52;
+  --sill-face: #212b3e;
+
+  --room-wall: #1c2434;
+  --room-wall-dark: #121a28;
+  --room-shelf: #33405a;
+  --room-shelf-dark: #232e42;
+  --room-counter: #26304a;
+  --room-counter-top: #3a4763;
+  --room-board: #1b2434;
+  --room-paper: #c9cfd9;
+
+  --lamp: #8a6a3a;
+  --lamp-lit: #f0c888;
+  --glow: #f0b45c;
+  --glow-strength: 0.16;
+  --sheen: #bbd3f5;
+  --sheen-strength: 0.07;
+  --note: #c9a94e;
+
+  --shadow-a: 0.55;
+  --scene-shadow-a: 0.5;
+
+  --bind-0: #7e4a38;
+  --bind-1: #6b5a3a;
+  --bind-2: #3e5a82;
+  --bind-3: #4e6b58;
+  --bind-4: #8a7e68;
+  --bind-5: #8a3f3a;
+  --bind-6: #4a5a70;
+  --bind-7: #6e6552;
+  --bind-8: #5a4438;
+  --bind-9: #7a6a48;
+}
+
+/* ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 html,
 body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
   margin: 0;
+  padding: 0;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+html {
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
-  html {
+  html:not([data-theme="light"]) {
     color-scheme: dark;
+  }
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: 8px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent-blue) 28%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }

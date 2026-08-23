@@ -1,0 +1,214 @@
+.card {
+  position: relative;
+  width: min(600px, 100%);
+  border-radius: var(--radius-card);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  padding: 18px 20px 20px;
+  box-shadow:
+    0 24px 56px -12px rgba(0, 0, 0, var(--shadow-a)),
+    0 4px 10px -4px rgba(0, 0, 0, calc(var(--shadow-a) * 0.8));
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.card:focus-within {
+  border-color: color-mix(in srgb, var(--accent-blue) 45%, var(--border-subtle));
+}
+
+.dragging {
+  border-color: var(--accent-blue);
+  border-style: dashed;
+}
+
+.dropHint {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--surface-card) 88%, transparent);
+  color: var(--accent-blue);
+  font-size: 13px;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 8px 0 9px;
+  border-radius: 8px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  max-width: 100%;
+}
+
+.chipName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+.chipPdf {
+  color: var(--accent-red);
+  display: inline-flex;
+}
+
+.chipImg {
+  color: var(--accent-blue);
+  display: inline-flex;
+}
+
+.chipRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  color: var(--text-muted);
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.chipRemove:hover {
+  background: var(--surface-raised);
+  color: var(--text-primary);
+}
+
+.input {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  max-height: 190px;
+  resize: none;
+  border: none;
+  background: none;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--text-primary);
+  padding: 0 0 0 10px;
+  border-left: 1.6px solid var(--accent-blue);
+  outline: none;
+  overflow-y: auto;
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.input:focus-visible {
+  box-shadow: none;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+}
+
+.iconButton:hover {
+  background: var(--surface-raised);
+  color: var(--text-primary);
+}
+
+.listening {
+  background: color-mix(in srgb, var(--accent-red) 14%, var(--surface-sunken));
+  border-color: color-mix(in srgb, var(--accent-red) 45%, transparent);
+  color: var(--accent-red);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-red) 35%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
+.hint {
+  flex: 1;
+  min-width: 0;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: var(--accent-blue);
+  color: var(--text-inverse);
+  box-shadow: 0 6px 14px -2px color-mix(in srgb, var(--accent-blue) 45%, transparent);
+  transition: transform 0.14s ease, opacity 0.14s ease;
+}
+
+.send:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .card {
+    padding: 14px 14px 16px;
+  }
+
+  /* na wąskim ekranie przykładowe pytanie zajmuje dwie linie */
+  .input {
+    min-height: 46px;
+  }
+
+  .hint {
+    display: none;
+  }
+}
