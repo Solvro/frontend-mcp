@@ -158,7 +158,7 @@
 }
 
 .depthBlur {
-  filter: blur(1.3px);
+  filter: blur(0.8px);
 }
 
 .screenBlend {

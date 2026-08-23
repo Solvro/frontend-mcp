@@ -1,17 +1,15 @@
 "use client";
 
-import { ClockIcon, LoginIcon, MenuIcon, MicIcon } from "./Icons";
+import { ClockIcon, LoginIcon, MenuIcon } from "./Icons";
 import { ThemeToggle } from "./ThemeToggle";
 import styles from "./Topbar.module.css";
 
 type TopbarProps = {
-  listening: boolean;
-  onToggleListening: () => void;
   onLogin: () => void;
   onOpenDrawer: () => void;
 };
 
-export function Topbar({ listening, onToggleListening, onLogin, onOpenDrawer }: TopbarProps) {
+export function Topbar({ onLogin, onOpenDrawer }: TopbarProps) {
   return (
     <header className={styles.topbar}>
       <button
@@ -33,16 +31,6 @@ export function Topbar({ listening, onToggleListening, onLogin, onOpenDrawer }: 
       <div className={styles.spacer} />
 
       <ThemeToggle className={styles.iconButton} />
-
-      <button
-        type="button"
-        className={`${styles.iconButton} ${styles.voice} ${listening ? styles.voiceActive : ""}`}
-        onClick={onToggleListening}
-        aria-pressed={listening}
-        aria-label={listening ? "Zatrzymaj dyktowanie" : "Zadaj pytanie głosem"}
-      >
-        <MicIcon />
-      </button>
 
       <button type="button" className={styles.login} onClick={onLogin}>
         <LoginIcon size={16} />

@@ -62,23 +62,6 @@
   color: var(--text-primary);
 }
 
-/* ikona mowy — główny skrót w prawym górnym rogu */
-.voice {
-  background: var(--accent-blue-soft);
-  border-color: transparent;
-  color: var(--accent-blue);
-}
-
-.voice:hover {
-  color: var(--accent-blue);
-  filter: brightness(1.04);
-}
-
-.voiceActive {
-  background: color-mix(in srgb, var(--accent-red) 16%, var(--surface-raised));
-  color: var(--accent-red);
-}
-
 .login {
   display: inline-flex;
   align-items: center;

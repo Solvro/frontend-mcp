@@ -64,16 +64,29 @@ export function useDictation(onTranscript: (text: string) => void) {
     };
   }, []);
 
+  // Efekty uboczne trzymamy poza updaterem stanu — w trybie deweloperskim React
+  // wywołuje updater dwa razy, przez co start() leciał na już uruchomionej sesji.
   const toggle = useCallback(() => {
     const recognition = recognitionRef.current;
-    setListening((wasListening) => {
-      if (recognition) {
-        if (wasListening) recognition.stop();
-        else recognition.start();
-      }
-      return !wasListening;
-    });
-  }, []);
+
+    if (!recognition) {
+      setListening((wasListening) => !wasListening);
+      return;
+    }
+
+    if (listening) {
+      recognition.stop();
+      setListening(false);
+      return;
+    }
+
+    try {
+      recognition.start();
+      setListening(true);
+    } catch {
+      setListening(false);
+    }
+  }, [listening]);
 
   return { listening, toggle };
 }

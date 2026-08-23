@@ -67,7 +67,6 @@
 
   --sidebar-w: 288px;
   --radius-card: 18px;
-  --ring: 0 0 0 3px color-mix(in srgb, var(--accent-blue) 30%, transparent);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -249,9 +248,10 @@ button {
 }
 
 :focus-visible {
-  outline: none;
-  box-shadow: var(--ring);
-  border-radius: 8px;
+  /* outline respektuje własne zaokrąglenie elementu — box-shadow z wymuszonym
+     border-radius potrafił zaginać krawędzie (np. kursor w polu pytania) */
+  outline: 2px solid color-mix(in srgb, var(--accent-blue) 60%, transparent);
+  outline-offset: 2px;
 }
 
 ::selection {

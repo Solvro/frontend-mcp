@@ -6,7 +6,7 @@ import { CONVERSATION_GROUPS } from "@/lib/data";
 import styles from "./Sidebar.module.css";
 
 type SidebarProps = {
-  activeId: string;
+  activeId: string | null;
   onSelect: (id: string) => void;
   onNewChat: () => void;
   onLogin: () => void;
@@ -24,6 +24,8 @@ export function Sidebar({
 }: SidebarProps) {
   const [query, setQuery] = useState("");
   const [showLoginCard, setShowLoginCard] = useState(true);
+
+  const hasHistory = CONVERSATION_GROUPS.length > 0;
 
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -57,20 +59,36 @@ export function Sidebar({
           Nowa rozmowa
         </button>
 
-        <div className={styles.search}>
-          <SearchIcon size={15} />
-          <input
-            className={styles.searchInput}
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Szukaj w rozmowach"
-            aria-label="Szukaj w rozmowach"
-          />
-        </div>
+        {hasHistory && (
+          <div className={styles.search}>
+            <SearchIcon size={15} />
+            <input
+              className={styles.searchInput}
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Szukaj w rozmowach"
+              aria-label="Szukaj w rozmowach"
+            />
+          </div>
+        )}
 
         <nav className={styles.history}>
-          {groups.length === 0 && <p className={styles.empty}>Brak pasujących rozmów.</p>}
+          {!hasHistory && (
+            <div className={styles.emptyState}>
+              <span className={styles.emptyIcon}>
+                <MessageIcon size={18} />
+              </span>
+              <p className={styles.emptyTitle}>Brak rozmów</p>
+              <p className={styles.emptyText}>
+                Zadaj pierwsze pytanie w okienku — rozmowa pojawi się tutaj.
+              </p>
+            </div>
+          )}
+
+          {hasHistory && groups.length === 0 && (
+            <p className={styles.empty}>Brak pasujących rozmów.</p>
+          )}
 
           {groups.map((group) => (
             <section key={group.id} className={styles.group}>

@@ -98,8 +98,9 @@
   font-size: 16px;
   line-height: 1.4;
   color: var(--text-primary);
-  padding: 0 0 0 10px;
-  border-left: 1.6px solid var(--accent-blue);
+  /* natywny, mrugający kursor w miejscu pisania — w akcencie marki */
+  caret-color: var(--accent-blue);
+  padding: 0;
   outline: none;
   overflow-y: auto;
 }
@@ -109,7 +110,7 @@
 }
 
 .input:focus-visible {
-  box-shadow: none;
+  outline: none;
 }
 
 .actions {

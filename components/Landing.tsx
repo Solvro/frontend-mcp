@@ -6,7 +6,7 @@ import { HeartIcon } from "./Icons";
 import { Scene } from "./Scene";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
-import { CONVERSATION_GROUPS, SUGGESTIONS } from "@/lib/data";
+import { SUGGESTIONS } from "@/lib/data";
 import { useDictation } from "@/lib/useDictation";
 import type { Attachment } from "@/lib/types";
 import styles from "./Landing.module.css";
@@ -26,7 +26,7 @@ function toAttachment(file: File): Attachment {
 export function Landing() {
   const [question, setQuestion] = useState("");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [activeId, setActiveId] = useState(CONVERSATION_GROUPS[0].items[0].id);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
@@ -53,6 +53,7 @@ export function Landing() {
     setQuestion("");
     setAttachments([]);
     setStatus(null);
+    setActiveId(null);
     setDrawerOpen(false);
   }, []);
 
@@ -76,12 +77,7 @@ export function Landing() {
       />
 
       <div className={styles.main}>
-        <Topbar
-          listening={listening}
-          onToggleListening={toggleListening}
-          onLogin={handleLogin}
-          onOpenDrawer={() => setDrawerOpen(true)}
-        />
+        <Topbar onLogin={handleLogin} onOpenDrawer={() => setDrawerOpen(true)} />
 
         <div className={styles.scroll}>
           <Scene
