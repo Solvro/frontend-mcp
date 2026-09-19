@@ -7,19 +7,25 @@ type SceneProps = {
   children: ReactNode;
   /** Wszystko poniżej pierwszego planu (podpowiedzi, stopka). */
   below?: ReactNode;
+  /** Trwająca rozmowa — zastępuje powitanie nad okienkiem. */
+  conversation?: ReactNode;
 };
 
-export function Scene({ children, below }: SceneProps) {
+export function Scene({ children, below, conversation }: SceneProps) {
   return (
     <div className={styles.stage}>
       <div className={styles.glow} aria-hidden="true" />
 
-      <p className={styles.eyebrow}>Asystent studenta · Politechnika Wrocławska</p>
-      <h1 className={styles.heading}>Dzień dobry. Czym mogę służyć?</h1>
-      <p className={styles.subtitle}>
-        Pytaj o regulaminy, terminy, zapisy i stypendia — odpowiem i pokażę, z którego dokumentu to
-        wynika.
-      </p>
+      {conversation ?? (
+        <>
+          <p className={styles.eyebrow}>Asystent studenta · Politechnika Wrocławska</p>
+          <h1 className={styles.heading}>Dzień dobry. Czym mogę służyć?</h1>
+          <p className={styles.subtitle}>
+            Pytaj o regulaminy, terminy, zapisy i stypendia — odpowiem i pokażę, z którego dokumentu
+            to wynika.
+          </p>
+        </>
+      )}
 
       <div className={styles.sceneWrap}>
         <div className={styles.plaque}>DZIEKANAT · OKIENKO 1</div>

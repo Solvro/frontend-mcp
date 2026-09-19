@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { ChatThread } from "./ChatThread";
 import { Composer } from "./Composer";
 import { HeartIcon } from "./Icons";
 import { Scene } from "./Scene";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { SUGGESTIONS } from "@/lib/data";
+import { useChat } from "@/lib/useChat";
 import { useDictation } from "@/lib/useDictation";
 import type { Attachment } from "@/lib/types";
 import styles from "./Landing.module.css";
@@ -26,10 +28,10 @@ function toAttachment(file: File): Attachment {
 export function Landing() {
   const [question, setQuestion] = useState("");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
+  const chat = useChat();
   const { listening, toggle: toggleListening } = useDictation(setQuestion);
 
   const addFiles = useCallback((files: FileList | File[]) => {
@@ -44,32 +46,32 @@ export function Landing() {
     setAttachments((current) => current.filter((file) => file.id !== id));
   }, []);
 
-  const handleSend = useCallback(() => {
-    // TODO: podpiąć POST do API asystenta (MCP + warstwa ML).
-    setStatus("Pytanie gotowe do wysłania — API asystenta nie jest jeszcze podpięte.");
-  }, []);
+  const handleSend = async () => {
+    const text = question;
+    setQuestion("");
+    if (!(await chat.send(text))) setQuestion(text);
+  };
 
-  const startNewChat = useCallback(() => {
+  const startNewChat = () => {
+    chat.reset();
     setQuestion("");
     setAttachments([]);
     setStatus(null);
-    setActiveId(null);
     setDrawerOpen(false);
-  }, []);
+  };
 
-  const handleLogin = useCallback(() => {
-    // TODO: przekierowanie do logowania (USOS / OAuth).
+  const handleLogin = () => {
+    // TODO(Task 7): dialog logowania.
     setStatus("Logowanie nie jest jeszcze podpięte.");
-  }, []);
+  };
+
+  const hasConversation = chat.messages.length > 0 || chat.pending;
 
   return (
     <div className={styles.shell}>
       <Sidebar
-        activeId={activeId}
-        onSelect={(id) => {
-          setActiveId(id);
-          setDrawerOpen(false);
-        }}
+        activeId={chat.sessionId}
+        onSelect={() => setDrawerOpen(false)}
         onNewChat={startNewChat}
         onLogin={handleLogin}
         isDrawerOpen={drawerOpen}
@@ -81,26 +83,33 @@ export function Landing() {
 
         <div className={styles.scroll}>
           <Scene
+            conversation={
+              hasConversation ? (
+                <ChatThread messages={chat.messages} pending={chat.pending} error={chat.error} />
+              ) : undefined
+            }
             below={
               <>
-                {status && (
+                {!hasConversation && (status ?? chat.error) && (
                   <p className={styles.status} role="status">
-                    {status}
+                    {status ?? chat.error}
                   </p>
                 )}
 
-                <div className={styles.suggestions}>
-                  {SUGGESTIONS.map((suggestion) => (
-                    <button
-                      key={suggestion}
-                      type="button"
-                      className={styles.suggestion}
-                      onClick={() => setQuestion(suggestion)}
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
+                {!hasConversation && (
+                  <div className={styles.suggestions}>
+                    {SUGGESTIONS.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        className={styles.suggestion}
+                        onClick={() => setQuestion(suggestion)}
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 <p className={sceneStyles.trust}>
                   Odpowiedzi zawierają odnośniki do regulaminów i uchwał PWR · zawsze sprawdź źródło
@@ -125,6 +134,8 @@ export function Landing() {
               onSend={handleSend}
               listening={listening}
               onToggleListening={toggleListening}
+              disabled={chat.pending}
+              attachmentsEnabled={false}
             />
           </Scene>
         </div>

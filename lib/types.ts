@@ -14,3 +14,9 @@ export type ConversationGroup = {
   label: string;
   items: Conversation[];
 };
+
+export type ChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+};

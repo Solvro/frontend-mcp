@@ -20,6 +20,9 @@ import {
 import styles from "./Composer.module.css";
 import type { Attachment } from "@/lib/types";
 
+/** Jak CHAT_INPUT_MAX_LENGTH w chat-service. */
+const MAX_LENGTH = 2000;
+
 type ComposerProps = {
   value: string;
   onValueChange: (value: string) => void;
@@ -29,6 +32,10 @@ type ComposerProps = {
   onSend: () => void;
   listening: boolean;
   onToggleListening: () => void;
+  /** Czekamy na odpowiedź — pisać można, wysłać nie. */
+  disabled?: boolean;
+  /** Backend nie przyjmuje jeszcze plików — wtedy chowamy spinacz i drag&drop. */
+  attachmentsEnabled?: boolean;
 };
 
 export function Composer({
@@ -40,6 +47,8 @@ export function Composer({
   onSend,
   listening,
   onToggleListening,
+  disabled = false,
+  attachmentsEnabled = true,
 }: ComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -60,7 +69,8 @@ export function Composer({
     return () => window.removeEventListener("resize", resize);
   }, [value]);
 
-  const canSend = value.trim().length > 0 || attachments.length > 0;
+  const hasContent = value.trim().length > 0 || (attachmentsEnabled && attachments.length > 0);
+  const canSend = !disabled && hasContent;
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -83,18 +93,29 @@ export function Composer({
     [onAddFiles],
   );
 
+  const dropHandlers = attachmentsEnabled
+    ? {
+        onDragEnter: (e: DragEvent<HTMLDivElement>) => {
+          e.preventDefault();
+          setDragDepth((d) => d + 1);
+        },
+        onDragOver: (e: DragEvent<HTMLDivElement>) => e.preventDefault(),
+        onDragLeave: () => setDragDepth((d) => Math.max(0, d - 1)),
+        onDrop: handleDrop,
+      }
+    : {};
+
+  const hint = listening
+    ? "Słucham…"
+    : disabled
+      ? "Czekam na odpowiedź…"
+      : attachmentsEnabled
+        ? "PDF, DOCX, PNG — do 20 MB"
+        : "Enter — wyślij · Shift+Enter — nowa linia";
+
   return (
-    <div
-      className={`${styles.card} ${dragDepth > 0 ? styles.dragging : ""}`}
-      onDragEnter={(e) => {
-        e.preventDefault();
-        setDragDepth((d) => d + 1);
-      }}
-      onDragOver={(e) => e.preventDefault()}
-      onDragLeave={() => setDragDepth((d) => Math.max(0, d - 1))}
-      onDrop={handleDrop}
-    >
-      {attachments.length > 0 && (
+    <div className={`${styles.card} ${dragDepth > 0 ? styles.dragging : ""}`} {...dropHandlers}>
+      {attachmentsEnabled && attachments.length > 0 && (
         <ul className={styles.attachments}>
           {attachments.map((file) => (
             <li key={file.id} className={styles.chip}>
@@ -125,6 +146,7 @@ export function Composer({
         ref={textareaRef}
         className={styles.input}
         rows={1}
+        maxLength={MAX_LENGTH}
         value={value}
         placeholder="Jak wygląda procedura obrony inżynierki?"
         onChange={(e) => onValueChange(e.target.value)}
@@ -132,22 +154,26 @@ export function Composer({
       />
 
       <div className={styles.actions}>
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp"
-          className={styles.srOnly}
-          onChange={handleFileInput}
-        />
-        <button
-          type="button"
-          className={styles.iconButton}
-          onClick={() => fileInputRef.current?.click()}
-          aria-label="Załącz plik"
-        >
-          <PaperclipIcon />
-        </button>
+        {attachmentsEnabled && (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp"
+              className={styles.srOnly}
+              onChange={handleFileInput}
+            />
+            <button
+              type="button"
+              className={styles.iconButton}
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="Załącz plik"
+            >
+              <PaperclipIcon />
+            </button>
+          </>
+        )}
         <button
           type="button"
           className={`${styles.iconButton} ${listening ? styles.listening : ""}`}
@@ -158,9 +184,7 @@ export function Composer({
           <MicIcon />
         </button>
 
-        <p className={styles.hint}>
-          {listening ? "Słucham…" : "PDF, DOCX, PNG — do 20 MB"}
-        </p>
+        <p className={styles.hint}>{hint}</p>
 
         <button
           type="button"
