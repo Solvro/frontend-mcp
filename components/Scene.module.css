@@ -1,4 +1,5 @@
 .stage {
+  --overlap: 58px;
   position: relative;
   flex: 1;
   display: flex;
@@ -31,10 +32,18 @@
     color-mix(in srgb, var(--glow) 55%, transparent) 0%,
     transparent 68%
   );
-  opacity: var(--glow-strength);
+  /* w dzień lampka jest zgaszona, więc poświata na ścianie słabnie */
+  opacity: calc(var(--glow-strength) * (0.35 + 0.65 * var(--lamp-on)));
   filter: blur(40px);
   pointer-events: none;
   z-index: -1;
+  transition: opacity 0.9s ease;
+}
+
+.greeting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .eyebrow {
@@ -76,6 +85,13 @@
   width: 100%;
   max-width: 880px;
   margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.frame {
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -145,7 +161,7 @@
   height: 100%;
   overflow: hidden;
   border-radius: 2px;
-  box-shadow: inset 0 8px 28px 2px rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 8px 28px 2px rgba(0, 0, 0, 0.45);
 }
 
 .roomSvg,
@@ -158,7 +174,7 @@
 }
 
 .depthBlur {
-  filter: blur(0.8px);
+  filter: blur(0.5px);
 }
 
 .screenBlend {
@@ -202,7 +218,7 @@
   position: relative;
   z-index: 3;
   width: 100%;
-  margin-top: -58px;
+  margin-top: calc(-1 * var(--overlap));
   display: flex;
   justify-content: center;
 }
@@ -229,7 +245,155 @@
     height: 22px;
   }
 
-  .overlap {
-    margin-top: -40px;
+  .stage {
+    --overlap: 40px;
+  }
+
+  .chatting .threadScroll {
+    padding: 18px 12px 16px;
+  }
+
+  .dock {
+    padding: 0 14px 14px;
+  }
+
+  .backdrop {
+    padding: 14px;
+  }
+}
+
+/* ------------------------------------------------------- tryb rozmowy */
+
+/* Okienko jest nieruchomym tłem na środku; przewija się tylko wątek,
+   a pole pytania jest zadokowane na dole. */
+.chatting {
+  min-height: 0;
+  padding: 0;
+  align-items: stretch;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  pointer-events: none;
+}
+
+.backdrop .frame {
+  max-width: 880px;
+}
+
+.threadScroll {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 28px 24px 20px;
+  /* wiadomości miękko znikają pod topbarem zamiast być ucięte */
+  mask-image: linear-gradient(to bottom, transparent 0, #000 32px);
+}
+
+/* krótka rozmowa stoi przy polu pytania, dłuższa przewija się w górę */
+.threadInner {
+  margin-top: auto;
+}
+
+.dock {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 24px 16px;
+}
+
+.dock .overlap {
+  margin-top: 0;
+}
+
+.dock .trust {
+  margin-top: 12px;
+}
+
+/* ------------------------------------------------------ lampka i kubek */
+
+/* Lampka świeci tylko w ciemnym motywie (token --lamp-on). Przełącznik motywu
+   ustawia html[data-lamp], co odpala mruganie przy zapalaniu albo gaśnięcie. */
+.lampLight {
+  opacity: var(--lamp-on);
+  transition: opacity 0.6s ease;
+}
+
+:global(html[data-lamp="on"]) .lampLight {
+  animation: lamp-on 1.4s linear backwards;
+}
+
+:global(html[data-lamp="off"]) .lampLight {
+  animation: lamp-off 0.7s ease-in backwards;
+}
+
+@keyframes lamp-on {
+  0% { opacity: 0; }
+  10% { opacity: 0.75; }
+  14% { opacity: 0.08; }
+  24% { opacity: 0.9; }
+  30% { opacity: 0.25; }
+  38% { opacity: 0.25; }
+  46% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+@keyframes lamp-off {
+  0% { opacity: 1; }
+  12% { opacity: 1; }
+  18% { opacity: 0.55; }
+  26% { opacity: 0.8; }
+  100% { opacity: 0; }
+}
+
+.steamWisp {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: steam 3.6s ease-out infinite;
+}
+
+.steamWisp:nth-child(2) {
+  animation-delay: -1.2s;
+  animation-duration: 4.1s;
+}
+
+.steamWisp:nth-child(3) {
+  animation-delay: -2.4s;
+  animation-duration: 3.8s;
+}
+
+@keyframes steam {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.85, 0.7);
+  }
+  25% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(1.4, 1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .steamWisp {
+    animation: none;
+    opacity: 0.35;
   }
 }

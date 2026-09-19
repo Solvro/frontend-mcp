@@ -27,3 +27,6 @@ export type MessageDto = {
 };
 
 export type AuthSession = { authenticated: boolean; email: string | null };
+
+/** Stan dziennego limitu pytań po ostatniej odpowiedzi. */
+export type QuotaInfo = { remaining: number; resetSeconds: number };

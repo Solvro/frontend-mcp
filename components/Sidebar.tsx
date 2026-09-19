@@ -9,7 +9,8 @@ type SidebarProps = {
   activeId: string | null;
   onSelect: (id: string) => void;
   onNewChat: () => void;
-  onLogin: () => void;
+  onLogin: (trigger: HTMLElement) => void;
+  isAuthenticated: boolean;
   isDrawerOpen: boolean;
   onCloseDrawer: () => void;
 };
@@ -19,6 +20,7 @@ export function Sidebar({
   onSelect,
   onNewChat,
   onLogin,
+  isAuthenticated,
   isDrawerOpen,
   onCloseDrawer,
 }: SidebarProps) {
@@ -117,7 +119,7 @@ export function Sidebar({
           ))}
         </nav>
 
-        {showLoginCard && (
+        {showLoginCard && !isAuthenticated && (
           <div className={styles.loginCard} role="note">
             <button
               type="button"
@@ -130,7 +132,11 @@ export function Sidebar({
             <p className={styles.loginText}>
               Zaloguj się, aby zapisywać historię rozmów i wracać do odpowiedzi.
             </p>
-            <button type="button" className={styles.loginButton} onClick={onLogin}>
+            <button
+              type="button"
+              className={styles.loginButton}
+              onClick={(event) => onLogin(event.currentTarget)}
+            >
               <LoginIcon size={15} />
               Zaloguj się
             </button>

@@ -82,7 +82,9 @@ dozwolone i stosowane, np. do hoverów, tła błędu i zaznaczenia.
 | `--room-paper` | `#e8dfc8` | `#c9cfd9` | kartki, papiery |
 | `--lamp` / `--lamp-lit` | `#c9873a` / `#f2ce8e` | `#8a6a3a` / `#f0c888` | lampa, żarówka |
 | `--glow` + `--glow-strength` | `#f5c066`, `0.2` | `#f0b45c`, `0.16` | poświata na ścianie |
-| `--sheen` + `--sheen-strength` | `#ffffff`, `0.1` | `#bbd3f5`, `0.07` | refleksy na szybie |
+| `--sheen` + `--sheen-strength` | `#ffffff`, `0.06` | `#bbd3f5`, `0.045` | refleksy na szybie (przejrzysta szyba) |
+| `--lamp-on` | `0` | `1` | lampka: w dzień zgaszona, wieczorem świeci; mnoży też poświatę `.glow` |
+| `--coffee` | `#4a2e1a` | `#2e1d12` | kawa w kubku na ladzie |
 | `--note` | `#e9d48a` | `#c9a94e` | karteczka na szybie |
 | `--bind-0` … `--bind-9` | 10 odcieni (terakota, oliwka, granat, zieleń, beż, bordo, stal…) | przygaszone odpowiedniki | grzbiety segregatorów |
 
@@ -204,6 +206,14 @@ Ramki mają zawsze `1px solid`, domyślnie `--border-subtle`.
 ### Topbar (`Topbar.tsx`)
 - 68px, tło `--bg-page`, dolna ramka.
 - Po lewej pigułka „Okienko czynne 24/7” (34px, zegar w `--accent-amber`).
+- **Limit pytań wyczerpany:** pigułka zmienia się w „Okienko zamknięte jeszcze przez **7 h 45 min**”
+  (zegar i obrys w `--accent-red`, tło `--accent-red` 8%, odliczanie co sekundę, widoczna też na telefonie).
+  Blokadę znamy z nagłówków `RateLimit-Remaining` / `RateLimit-Reset` / `Retry-After` (`lib/quotaLock.ts`,
+  zapamiętana w `localStorage` `gw-locked-until`), więc kolejne pytanie nie leci na serwer. Composer jest
+  wtedy zablokowany z podpowiedzią „Limit pytań wyczerpany”, a pod nim stoi czerwony komunikat
+  `QuotaNotice`: „**Osiągnięto limit pytań.** Reset za **7 h 44 min**.” (odliczanie, tło `--accent-red` 10%
+  na `--surface-card`; niezalogowani mają przy nim przycisk „Zaloguj się”). Zastępuje zwykły dymek błędu. Logowanie i wylogowanie zdejmują blokadę
+  (limit liczy się per konto).
 - Po prawej przełącznik motywu (38px, `radius 11px`; ikona księżyc/słońce wynika z CSS, bez stanu Reacta) i przycisk „Zaloguj się” (`--surface-card`, obrys `--border-strong`).
 
 ### Scena (`Scene.tsx`, `RoomArt.tsx`)
@@ -227,6 +237,10 @@ Ramki mają zawsze `1px solid`, domyślnie `--border-subtle`.
 
 ### Wątek rozmowy (`ChatThread.tsx`) — nowy, jeszcze nie ma go w Figmie
 - Zastępuje eyebrow, nagłówek i podtytuł nad okienkiem, gdy są wiadomości.
+- **Okienko staje się nieruchomym tłem na środku obszaru rozmowy** (`.backdrop`, `inset: 0`, wyśrodkowane).
+  Nie reaguje na pisanie ani na długość wątku. Przewija się tylko wątek (`.threadScroll`, miękkie
+  wygaszenie u góry), pole pytania jest zadokowane na dole (`.dock`). Krótka rozmowa stoi przy polu
+  pytania, dymki leżą na szybie. Stopka w trybie rozmowy jest ukryta.
 - Dymek użytkownika: po prawej, `--accent-brand`, tekst `--text-inverse`, prawy dolny róg 4px.
 - Dymek asystenta: po lewej, `--surface-card` z ramką, lewy dolny róg 4px, nad treścią etykieta mono „DZIEKANAT · OKIENKO 1”.
 - Oczekiwanie na odpowiedź: dymek asystenta z kursywą „Szukam w segregatorach…”.
@@ -257,13 +271,18 @@ Obecnie minimalny i funkcjonalny:
 | fokus karty pytania | `border-color 0.16s` |
 | szuflada sidebara | `transform 0.22s ease` |
 | dyktowanie | pulsujący pierścień 1.4s |
+| wejście w rozmowę / „Nowa rozmowa” | `startTransition` + React `<ViewTransition>`: okienko (`gw-window`) i pole pytania (`gw-composer`) przejeżdżają na nowe miejsca (560 ms), powitanie gaśnie, wątek wjeżdża od dołu. CSS w `app/globals.css` |
+| para z kubka | 3 smugi, `translateY` + `scale` + `opacity`, 3.6–4.1 s w pętli; poza `.depthBlur`, żeby nie przeliczać filtra pokoju |
+| zmiana motywu | View Transitions API: nowy motyw rozlewa się kołem (`clip-path: circle()`) od przełącznika na cały ekran, 700 ms, `cubic-bezier(0.65,0,0.35,1)`; nowa ikona słońca/księżyca wjeżdża z obrotem. `components/ThemeToggle.tsx` |
+| lampka | `opacity: var(--lamp-on)` z przejściem 0.6 s; przełącznik motywu ustawia `html[data-lamp]` → mruganie przy zapalaniu (1.4 s) albo gaśnięcie (0.7 s) |
 | nowa wiadomość | `scrollIntoView({ behavior: "smooth" })` |
+| ekran logowania | `<dialog>` z `clip-path: inset(…)` rośnie z prostokąta klikniętego przycisku do pełnego ekranu (720 ms, `cubic-bezier(0.76,0,0.24,1)`); kopia przycisku gaśnie i rośnie (`scale 1.6`), zasłona w `--surface-card` przenika w `--bg-page`; treść wchodzi kaskadą od 300 ms (`translateY 18px`, co 70 ms). Zamknięcie tą samą drogą do przycisku (540 ms). `components/auth/AuthOverlay.tsx` |
 
 `prefers-reduced-motion: reduce` wyłącza animacje i przejścia globalnie. Nowa animacja musi to
 respektować.
 
-Na scenie **nic się jeszcze nie rusza** (lampa, drobinki kurzu w stożku światła i refleksy są
-statyczne). To naturalne miejsce na „trochę dynamiki” w kolejnej fazie.
+Na scenie ruszają się para z kubka i lampka (przy zmianie motywu). Drobinki kurzu i refleksy
+są statyczne.
 
 ---
 
@@ -303,4 +322,4 @@ statyczne). To naturalne miejsce na „trochę dynamiki” w kolejnej fazie.
 | historia w sidebarze | 8 przykładowych rozmów, grupy Dzisiaj / 7 dni temu / Wcześniej | dane z backendu; nowy użytkownik widzi pusty stan „Brak rozmów”; grupy Dziś / Wczoraj / Ostatnie 7 dni / Starsze |
 | załączniki w composerze | 2 chipy + spinacz + „PDF, DOCX, PNG — do 20 MB” | ukryte; podpowiedź „Enter — wyślij · Shift+Enter — nowa linia” |
 | wątek rozmowy | brak ekranu | `ChatThread` (dymki, „Szukam w segregatorach…”) |
-| stany logowania | tylko „Zaloguj się” | planowane: dialog logowania i „Wyloguj” |
+| stany logowania | tylko „Zaloguj się” | pełnoekranowe logowanie / rejestracja / reset hasła (lewa kolumna z nagłówkiem, po prawej okienko „DZIEKANAT · LOGOWANIE” z kartą formularza na parapecie); w topbarze „Wyloguj” |

@@ -29,7 +29,15 @@ export function clearTokens(res: NextResponse): void {
   }
 }
 
-const RELAYED_HEADERS = ["content-type", "retry-after", "x-request-id"];
+const RELAYED_HEADERS = [
+  "content-type",
+  "retry-after",
+  "x-request-id",
+  // limit pytań — frontend zamyka okienko, zanim kolejne pytanie odbije się od 429
+  "ratelimit-limit",
+  "ratelimit-remaining",
+  "ratelimit-reset",
+];
 
 /** Przepisuje odpowiedź serwisu 1:1 (status, treść, istotne nagłówki). */
 export async function relay(response: Response): Promise<NextResponse> {

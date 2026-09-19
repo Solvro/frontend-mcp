@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { startTransition, useCallback, useRef, useState } from "react";
 import { api } from "./api/client";
 import { ApiError } from "./api/problem";
 import { toChatMessages } from "./history";
+import { setQuotaLock } from "./quotaLock";
 import type { ChatMessage } from "./types";
 
 type UseChatOptions = {
@@ -27,6 +28,9 @@ export function useChat({ onAnswer, onUnauthorized }: UseChatOptions = {}) {
     (cause: unknown) => {
       const apiError = cause instanceof ApiError ? cause : null;
       if (apiError?.status === 401) onUnauthorized?.();
+      if (apiError?.status === 429) {
+        setQuotaLock(Date.now() + (apiError.retryAfter ?? 60) * 1000);
+      }
       if (apiError?.status === 404) setSessionId(null);
       setError(apiError?.message ?? "Coś poszło nie tak. Spróbuj ponownie.");
     },
@@ -46,7 +50,10 @@ export function useChat({ onAnswer, onUnauthorized }: UseChatOptions = {}) {
       setMessages((current) => [...current, question]);
 
       try {
-        const response = await api.sendMessage(content, sessionId);
+        const response = await api.sendMessage(content, sessionId, (quota) => {
+          // to było ostatnie pytanie z puli — zamykamy okienko od razu, bez czekania na 429
+          if (quota.remaining === 0) setQuotaLock(Date.now() + quota.resetSeconds * 1000);
+        });
         if (turn !== generation.current) return true;
         setSessionId(response.session_id);
         setMessages((current) => [...current, { id: localId(), role: "assistant", content: response.message }]);
@@ -54,8 +61,12 @@ export function useChat({ onAnswer, onUnauthorized }: UseChatOptions = {}) {
         return true;
       } catch (cause) {
         if (turn !== generation.current) return false;
-        setMessages((current) => current.filter((message) => message.id !== question.id));
-        fail(cause);
+        // Cofnięcie pytania w transition: przy pierwszym pytaniu scena wraca z trybu rozmowy
+        // płynnie (ViewTransition), a nie mignięciem.
+        startTransition(() => {
+          setMessages((current) => current.filter((message) => message.id !== question.id));
+          fail(cause);
+        });
         return false;
       } finally {
         busy.current = false;

@@ -32,8 +32,10 @@ type ComposerProps = {
   onSend: () => void;
   listening: boolean;
   onToggleListening: () => void;
-  /** Czekamy na odpowiedź — pisać można, wysłać nie. */
+  /** Czekamy na odpowiedź albo okienko jest zamknięte — pisać można, wysłać nie. */
   disabled?: boolean;
+  /** Podpowiedź przy zablokowanym wysyłaniu (domyślnie „Czekam na odpowiedź…”). */
+  disabledHint?: string;
   /** Backend nie przyjmuje jeszcze plików — wtedy chowamy spinacz i drag&drop. */
   attachmentsEnabled?: boolean;
 };
@@ -48,6 +50,7 @@ export function Composer({
   listening,
   onToggleListening,
   disabled = false,
+  disabledHint = "Czekam na odpowiedź…",
   attachmentsEnabled = true,
 }: ComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -108,7 +111,7 @@ export function Composer({
   const hint = listening
     ? "Słucham…"
     : disabled
-      ? "Czekam na odpowiedź…"
+      ? disabledHint
       : attachmentsEnabled
         ? "PDF, DOCX, PNG — do 20 MB"
         : "Enter — wyślij · Shift+Enter — nowa linia";

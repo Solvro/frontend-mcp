@@ -41,6 +41,36 @@
   color: var(--accent-amber);
 }
 
+/* limit pytań wyczerpany — okienko zamknięte do odblokowania */
+.pillClosed {
+  min-width: 0;
+  border-color: color-mix(in srgb, var(--accent-red) 35%, var(--border-subtle));
+  background: color-mix(in srgb, var(--accent-red) 8%, var(--surface-raised));
+  color: var(--text-primary);
+  animation: pill-close 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pillClosed .pillIcon {
+  color: var(--accent-red);
+}
+
+.pillText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pillText strong {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes pill-close {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
 .spacer {
   flex: 1;
 }
@@ -95,6 +125,13 @@
 
   .pill {
     display: none;
+  }
+
+  /* zamknięte okienko pokazujemy też na telefonie — to ważniejsze niż „czynne 24/7” */
+  .pillClosed {
+    display: inline-flex;
+    padding: 0 10px;
+    font-size: 11.5px;
   }
 
   .loginLabel {
