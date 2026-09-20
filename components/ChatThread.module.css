@@ -1,0 +1,82 @@
+.thread {
+  width: min(760px, 100%);
+  margin: 4px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 4px;
+}
+
+.user,
+.assistant {
+  max-width: 85%;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, calc(var(--shadow-a) * 0.6));
+}
+
+/* każdy nowy dymek (pytanie, „Szukam…”, odpowiedź) wjeżdża miękko zamiast wyskakiwać */
+.user,
+.assistant {
+  animation: bubble-in 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+.user {
+  transform-origin: 100% 100%;
+  align-self: flex-end;
+  background: var(--accent-brand);
+  color: var(--text-inverse);
+  border-bottom-right-radius: 4px;
+}
+
+.assistant {
+  transform-origin: 0 100%;
+  align-self: flex-start;
+  background: var(--surface-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-bottom-left-radius: 4px;
+}
+
+.author {
+  display: block;
+  margin-bottom: 4px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.content {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.typing {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.error {
+  align-self: center;
+  margin: 0;
+  padding: 9px 14px;
+  border-radius: 10px;
+  /* wątek leży na szybie okienka, więc tło musi być pełne */
+  background: color-mix(in srgb, var(--accent-red) 12%, var(--surface-card));
+  border: 1px solid color-mix(in srgb, var(--accent-red) 25%, transparent);
+  color: var(--accent-red);
+  font-size: 12.5px;
+  text-align: center;
+}

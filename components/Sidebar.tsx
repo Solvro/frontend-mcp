@@ -1,15 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { GraphMark, LoginIcon, MessageIcon, PlusIcon, SearchIcon, XIcon } from "./Icons";
 import { CONVERSATION_GROUPS } from "@/lib/data";
+import { UserMenu } from "./UserMenu";
 import styles from "./Sidebar.module.css";
 
 type SidebarProps = {
   activeId: string | null;
   onSelect: (id: string) => void;
   onNewChat: () => void;
-  onLogin: () => void;
+  onLogin: (trigger: HTMLElement) => void;
+  onLogout: () => void;
+  /** Zalogowany użytkownik; `null` — tryb anonimowy albo sesja jeszcze się wczytuje. */
+  email: string | null;
+  isAuthenticated: boolean;
   isDrawerOpen: boolean;
   onCloseDrawer: () => void;
 };
@@ -19,6 +25,9 @@ export function Sidebar({
   onSelect,
   onNewChat,
   onLogin,
+  onLogout,
+  email,
+  isAuthenticated,
   isDrawerOpen,
   onCloseDrawer,
 }: SidebarProps) {
@@ -44,7 +53,16 @@ export function Sidebar({
         className={`${styles.sidebar} ${styles.drawer} ${isDrawerOpen ? styles.drawerOpen : ""}`}
         aria-label="Historia rozmów"
       >
-        <div className={styles.brand}>
+        <Link
+          href="/"
+          className={styles.brand}
+          aria-label="Graf Wiedzy — strona główna"
+          onClick={(event) => {
+            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            event.preventDefault();
+            onNewChat();
+          }}
+        >
           <span className={styles.mark}>
             <GraphMark size={20} />
           </span>
@@ -52,7 +70,7 @@ export function Sidebar({
             <span className={styles.brandName}>Graf Wiedzy</span>
             <span className={styles.brandSub}>Asystent studenta</span>
           </span>
-        </div>
+        </Link>
 
         <button type="button" className={styles.newChat} onClick={onNewChat}>
           <PlusIcon size={16} />
@@ -117,7 +135,7 @@ export function Sidebar({
           ))}
         </nav>
 
-        {showLoginCard && (
+        {showLoginCard && !isAuthenticated && (
           <div className={styles.loginCard} role="note">
             <button
               type="button"
@@ -130,12 +148,18 @@ export function Sidebar({
             <p className={styles.loginText}>
               Zaloguj się, aby zapisywać historię rozmów i wracać do odpowiedzi.
             </p>
-            <button type="button" className={styles.loginButton} onClick={onLogin}>
+            <button
+              type="button"
+              className={styles.loginButton}
+              onClick={(event) => onLogin(event.currentTarget)}
+            >
               <LoginIcon size={15} />
               Zaloguj się
             </button>
           </div>
         )}
+
+        {email && <UserMenu email={email} onLogout={onLogout} />}
       </aside>
     </>
   );

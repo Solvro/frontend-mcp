@@ -70,9 +70,9 @@ export function RoomInterior() {
           <stop offset="1" stopColor="var(--glow)" stopOpacity="0" />
         </linearGradient>
         <linearGradient id="gw-vignette" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#000" stopOpacity="0.55" />
-          <stop offset="0.42" stopColor="#000" stopOpacity="0.06" />
-          <stop offset="1" stopColor="#000" stopOpacity="0.32" />
+          <stop offset="0" stopColor="#000" stopOpacity="0.36" />
+          <stop offset="0.42" stopColor="#000" stopOpacity="0.02" />
+          <stop offset="1" stopColor="#000" stopOpacity="0.2" />
         </linearGradient>
         <filter id="gw-bulb" x="-60%" y="-60%" width="220%" height="220%">
           <feGaussianBlur stdDeviation="7" />
@@ -82,6 +82,9 @@ export function RoomInterior() {
         </filter>
         <filter id="gw-cone-blur" x="-30%" y="-30%" width="160%" height="160%">
           <feGaussianBlur stdDeviation="6" />
+        </filter>
+        <filter id="gw-steam-blur" x="-100%" y="-40%" width="300%" height="180%">
+          <feGaussianBlur stdDeviation="1.3" />
         </filter>
       </defs>
 
@@ -146,9 +149,14 @@ export function RoomInterior() {
         <rect x="60" y="240" width="86" height="18" rx="1" fill="var(--room-paper)" opacity="0.85" transform="rotate(-1.5 103 249)" />
         <rect x="66" y="232" width="80" height="12" rx="1" fill="var(--room-paper)" opacity="0.6" transform="rotate(1 106 238)" />
         <rect x="300" y="244" width="54" height="14" rx="1" fill="var(--room-paper)" opacity="0.7" transform="rotate(2 327 251)" />
-        <rect x="196" y="238" width="22" height="20" rx="3" fill="var(--room-shelf)" />
-        <circle cx="219" cy="247" r="5" fill="var(--room-shelf)" />
-        <circle cx="219" cy="247" r="3" fill="var(--room-counter)" />
+
+        {/* kubek kawy na przodzie lady (para jest poza rozmyciem, niżej) */}
+        <ellipse cx="161" cy="300" rx="27" ry="3.5" fill="#000" opacity="0.28" />
+        <path d="M178 267 h4 a9 9 0 0 1 0 18 h-4" fill="none" stroke="var(--room-paper)" strokeWidth="5" />
+        <path d="M138 258 h40 v32 a10 10 0 0 1 -10 10 h-20 a10 10 0 0 1 -10 -10 Z" fill="var(--room-paper)" />
+        <path d="M178 258 v32 a10 10 0 0 1 -10 10 h-5 a10 10 0 0 0 9 -10 v-32 Z" fill="#000" opacity="0.14" />
+        <ellipse cx="158" cy="258" rx="20" ry="4" fill="var(--room-paper)" />
+        <ellipse cx="158" cy="258.5" rx="17" ry="3" fill="var(--coffee)" />
 
         {/* lampa */}
         <ellipse cx="557" cy="256" rx="29" ry="6" fill="var(--lamp)" />
@@ -156,28 +164,50 @@ export function RoomInterior() {
         <rect x="520" y="188" width="44" height="5" fill="var(--lamp)" transform="rotate(12 542 190)" />
         <g transform="translate(494 180)">
           <path d="M14 0 H56 L70 34 H0 Z" fill="var(--lamp)" />
-          <path d="M14 0 H56 L60 10 H10 Z" fill="var(--lamp-lit)" opacity="0.5" />
+          <path d="M14 0 H56 L60 10 H10 Z" fill="var(--lamp-lit)" opacity="0.25" />
         </g>
-        <ellipse cx="532" cy="214" rx="28" ry="8" fill="var(--lamp-lit)" opacity="0.95" filter="url(#gw-bulb)" />
+        {/* zgaszona żarówka — widać ją, gdy światło jest wyłączone */}
+        <ellipse cx="532" cy="214" rx="12" ry="3.5" fill="var(--room-paper)" opacity="0.3" />
 
-        {/* snop światła */}
-        <g className={styles.screenBlend}>
-          <path
-            d="M490 212 H570 L680 324 H380 Z"
-            fill="url(#gw-cone)"
-            filter="url(#gw-cone-blur)"
-          />
-          <ellipse cx="540" cy="263" rx="110" ry="25" fill="var(--glow)" opacity="0.35" filter="url(#gw-pool)" />
-          {[
-            [470, 232, 1.5],
-            [520, 206, 1],
-            [560, 238, 1.25],
-            [496, 252, 1],
-            [610, 244, 1],
-          ].map(([cx, cy, r], i) => (
-            <circle key={`mote-${i}`} cx={cx} cy={cy} r={r} fill="var(--glow)" opacity="0.5" />
-          ))}
+        {/* światło lampki: tylko w ciemnym motywie (--lamp-on) */}
+        <g className={styles.lampLight}>
+          <path d="M508 180 H550 L554 190 H504 Z" fill="var(--lamp-lit)" opacity="0.35" />
+          <ellipse cx="532" cy="214" rx="28" ry="8" fill="var(--lamp-lit)" opacity="0.95" filter="url(#gw-bulb)" />
+
+          {/* snop światła */}
+          <g className={styles.screenBlend}>
+            <path
+              d="M490 212 H570 L680 324 H380 Z"
+              fill="url(#gw-cone)"
+              filter="url(#gw-cone-blur)"
+            />
+            <ellipse cx="540" cy="263" rx="110" ry="25" fill="var(--glow)" opacity="0.35" filter="url(#gw-pool)" />
+            {[
+              [470, 232, 1.5],
+              [520, 206, 1],
+              [560, 238, 1.25],
+              [496, 252, 1],
+              [610, 244, 1],
+            ].map(([cx, cy, r], i) => (
+              <circle key={`mote-${i}`} cx={cx} cy={cy} r={r} fill="var(--glow)" opacity="0.5" />
+            ))}
+          </g>
         </g>
+      </g>
+
+      {/* para z kubka — poza rozmyciem głębi, żeby animacja nie przeliczała filtra całego pokoju */}
+      <g filter="url(#gw-steam-blur)">
+        {[150, 158, 166].map((x) => (
+          <path
+            key={`steam-${x}`}
+            className={styles.steamWisp}
+            d={`M${x} 251 c -6 -8 6 -14 0 -22 s -6 -14 0 -22`}
+            fill="none"
+            stroke="var(--room-paper)"
+            strokeWidth="3.6"
+            strokeLinecap="round"
+          />
+        ))}
       </g>
 
       <rect x="0" y="0" width="656" height="328" fill="url(#gw-vignette)" />

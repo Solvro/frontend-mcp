@@ -90,6 +90,27 @@ Figma jest źródłem prawdy dla wyglądu — zmiany wizualne nanoś w obu miejs
 - Nazewnictwo warstw po angielsku, teksty w UI po polsku
 - Po każdej większej zmianie pokaż użytkownikowi screenshot przed pytaniem o dalsze kroki
 
+## Integracja z backendem (plan z 2026-09-18, status: do realizacji)
+
+Plan krok po kroku: `docs/superpowers/plans/2026-09-18-frontend-backend-integration.md`.
+
+- Backend: `../backend-mcp` — `chat-service` (:8001, `/api/chat`, `/api/sessions/*`,
+  `/api/users/me/sessions`) i `auth-service` (:8000, `/auth/*`, JWT RS256 + rotowany refresh token).
+  Start: `cd ../ml-mcp && just up-dev`, potem `cd ../backend-mcp && just up`.
+- Architektura: przeglądarka woła tylko `/bff/*` (route handlery Next) → brak CORS i self-signed TLS;
+  tokeny w ciasteczkach `httpOnly` (`gw_access`, `gw_refresh`, `gw_email`, path `/bff`), auto-refresh w BFF.
+  Env: `CHAT_SERVICE_URL`, `AUTH_SERVICE_URL` (`.env.example`).
+- Braki backendu (frontend je obchodzi / ukrywa): brak uploadu plików (spinacz ukryty), brak streamingu,
+  brak tytułu rozmowy (wysyłamy `metadata.title`), brak źródeł w odpowiedzi, brak `/auth/me`,
+  `docker/compose.yml` nie przekazuje kluczy LLM do chat-service, anonimowa rozmowa nie przechodzi
+  na konto po zalogowaniu, rate limit per IP za BFF wymaga `FORWARDED_ALLOW_IPS` w prod.
+- Daty z backendu to UTC bez strefy — parsuj przez `parseBackendDate` (dokleja `Z`).
+
+## Git
+
+- **Nie rób commitów** (ani `git add`/`push`) bez wyraźnej prośby użytkownika — zmiany zostają
+  w working tree do jego przeglądu. Dotyczy też kroków „Commit” w planach — pomijaj je.
+
 ## Komunikacja
 
 Użytkownik pisze po polsku — odpowiadaj po polsku. Teksty w designie po polsku.

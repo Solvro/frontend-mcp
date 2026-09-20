@@ -1,0 +1,493 @@
+/* Pełnoekranowe logowanie. Otwiera się z przycisku „Zaloguj się” — clip-path i kopię
+   przycisku animuje AuthOverlay.tsx (Web Animations API), tutaj tylko układ i kaskada treści. */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  background: var(--bg-page);
+  color: var(--text-primary);
+}
+
+.overlay::backdrop {
+  background: transparent;
+}
+
+.frame {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* kolor przycisku, który przez chwilę wypełnia rosnący prostokąt */
+.veil {
+  position: absolute;
+  inset: 0;
+  background: var(--surface-card);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ghost {
+  position: fixed;
+  pointer-events: none;
+  transform-origin: center;
+}
+
+/* ------------------------------------------------------------------ nagłówek */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 68px;
+  padding: 0 28px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--accent-brand);
+  color: var(--text-inverse);
+}
+
+.close {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 11px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.14s ease;
+}
+
+.close:hover {
+  background: var(--surface-raised);
+}
+
+.close:active {
+  transform: translateY(1px);
+}
+
+/* ------------------------------------------------------------------- układ */
+
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  min-height: 0;
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 28px;
+  padding: 48px clamp(28px, 5vw, 72px);
+  border-right: 1px solid var(--border-subtle);
+  background: var(--surface-sidebar);
+}
+
+.heading {
+  margin: 0;
+  max-width: 14ch;
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.lead {
+  margin: 16px 0 0;
+  max-width: 44ch;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+.aside {
+  margin: 0;
+  max-width: 44ch;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px 48px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: linear-gradient(to bottom, var(--wall-top), var(--wall-bottom));
+}
+
+.glow {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  z-index: -1;
+  width: min(760px, 96%);
+  height: 480px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--glow) 55%, transparent) 0%,
+    transparent 68%
+  );
+  opacity: var(--glow-strength);
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+.scene {
+  width: min(620px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.window {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pane {
+  width: 86%;
+}
+
+/* karta formularza opiera się o parapet, tak jak pole pytania na stronie głównej */
+.card {
+  position: relative;
+  z-index: 3;
+  width: min(420px, 100%);
+  margin-top: -58px;
+  padding: 24px 24px 22px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  background: var(--surface-card);
+  box-shadow:
+    0 24px 56px -12px rgba(0, 0, 0, var(--shadow-a)),
+    0 4px 10px -4px rgba(0, 0, 0, calc(var(--shadow-a) * 0.8));
+}
+
+.title {
+  margin: 0 0 16px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------- formularz */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.labelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.input {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 400;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.input:hover {
+  border-color: color-mix(in srgb, var(--accent-blue) 40%, var(--border-strong));
+}
+
+.input:focus-visible {
+  outline: none;
+  border-color: var(--accent-blue);
+  background: var(--surface-card);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-blue) 22%, transparent);
+}
+
+.passwordWrap {
+  position: relative;
+}
+
+.passwordWrap .input {
+  padding-right: 44px;
+}
+
+.peek {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  color: var(--text-muted);
+  transition: color 0.14s ease, background 0.14s ease;
+}
+
+.peek:hover {
+  color: var(--text-primary);
+  background: var(--surface-sunken);
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.submit {
+  height: 46px;
+  margin-top: 4px;
+  border-radius: 11px;
+  background: var(--accent-brand);
+  color: var(--text-inverse);
+  font-size: 14px;
+  font-weight: 600;
+  transition: filter 0.14s ease, transform 0.14s ease;
+}
+
+.submit:hover {
+  filter: brightness(1.08);
+}
+
+.submit:active {
+  transform: translateY(1px);
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.error,
+.notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.error {
+  background: color-mix(in srgb, var(--accent-red) 12%, transparent);
+  color: var(--accent-red);
+}
+
+.notice {
+  background: var(--accent-blue-soft);
+  color: var(--accent-blue);
+}
+
+.link {
+  padding: 0;
+  color: var(--accent-blue);
+  font-size: 12.5px;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent-blue) 40%, transparent);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.14s ease;
+}
+
+.link:hover {
+  text-decoration-color: currentColor;
+}
+
+.switch {
+  margin: 18px 0 0;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* ------------------------------------------------------------------- ruch */
+
+/* kaskada wejścia: rusza, gdy prostokąt jest mniej więcej w połowie drogi */
+.rise {
+  opacity: 0;
+}
+
+.overlay[data-state="open"] .rise {
+  animation: rise 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(300ms + var(--i, 0) * 70ms);
+}
+
+.overlay[data-state="ready"] .rise {
+  opacity: 1;
+}
+
+.overlay[data-state="closing"] .rise {
+  animation: sink 160ms ease-in both;
+}
+
+/* przełączanie logowanie / rejestracja / reset */
+.swap {
+  animation: swap 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sink {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes swap {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .overlay[data-state] .rise,
+  .overlay[data-state] .swap {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+/* ----------------------------------------------------------------- mobile */
+
+@media (max-width: 900px) {
+  .body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+
+  .intro {
+    gap: 16px;
+    padding: 28px 20px 24px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .heading {
+    max-width: none;
+    font-size: clamp(26px, 6.4vw, 34px);
+  }
+
+  .lead {
+    margin-top: 10px;
+    font-size: 14px;
+  }
+
+  .aside {
+    display: none;
+  }
+
+  .stage {
+    align-items: flex-start;
+    padding: 28px 16px 36px;
+  }
+}
+
+@media (max-width: 720px) {
+  .header {
+    padding: 0 14px;
+  }
+
+  .closeLabel {
+    display: none;
+  }
+
+  .close {
+    padding: 0 12px;
+  }
+
+  /* na telefonie okienko zjadałoby pół ekranu — zostaje sama karta */
+  .window {
+    display: none;
+  }
+
+  .card {
+    margin-top: 0;
+    padding: 20px 18px;
+  }
+}

@@ -1,0 +1,141 @@
+.root {
+  position: relative;
+}
+
+/* ----------------------------------------------------- panel konta */
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px 8px 8px;
+  border-radius: 14px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-subtle);
+  text-align: left;
+  transition: border-color 0.14s ease, background 0.14s ease;
+}
+
+.trigger:hover,
+.triggerOpen {
+  border-color: var(--border-strong);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 10px;
+  background: var(--accent-brand);
+  color: var(--text-inverse);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  line-height: 1.25;
+}
+
+.name,
+.email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.email {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.chevron {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------ menu */
+
+.menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 5;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  box-shadow:
+    0 18px 40px -12px rgba(0, 0, 0, var(--shadow-a)),
+    0 4px 10px -4px rgba(0, 0, 0, calc(var(--shadow-a) * 0.8));
+  animation: menuIn 0.16s ease-out;
+  transform-origin: bottom center;
+}
+
+@keyframes menuIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  transition: background 0.14s ease;
+}
+
+.menuItem:hover:not(:disabled) {
+  background: var(--surface-raised);
+}
+
+.menuItem:disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.soon {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.danger {
+  color: var(--accent-red);
+}
+
+.danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent-red) 10%, transparent);
+}
+
+.divider {
+  height: 1px;
+  margin: 5px 4px;
+  background: var(--border-subtle);
+}

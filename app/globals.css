@@ -47,8 +47,10 @@
   --glow: #f5c066;
   --glow-strength: 0.2;
   --sheen: #ffffff;
-  --sheen-strength: 0.1;
+  --sheen-strength: 0.06;
   --note: #e9d48a;
+  --lamp-on: 0;
+  --coffee: #4a2e1a;
 
   --shadow-a: 0.16;
   --scene-shadow-a: 0.18;
@@ -114,8 +116,10 @@
     --glow: #f0b45c;
     --glow-strength: 0.16;
     --sheen: #bbd3f5;
-    --sheen-strength: 0.07;
+    --sheen-strength: 0.045;
     --note: #c9a94e;
+    --lamp-on: 1;
+    --coffee: #2e1d12;
 
     --shadow-a: 0.55;
     --scene-shadow-a: 0.5;
@@ -177,8 +181,10 @@
   --glow: #f0b45c;
   --glow-strength: 0.16;
   --sheen: #bbd3f5;
-  --sheen-strength: 0.07;
+  --sheen-strength: 0.045;
   --note: #c9a94e;
+  --lamp-on: 1;
+  --coffee: #2e1d12;
 
   --shadow-a: 0.55;
   --scene-shadow-a: 0.5;
@@ -265,5 +271,85 @@ button {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+}
+
+/* ==========================================================================
+   View Transitions — wejście w rozmowę i powrót (Scene.tsx, startTransition w Landing)
+   ========================================================================== */
+
+/* okienko i pole pytania przejeżdżają na nowe miejsca */
+::view-transition-group(.gw-morph) {
+  animation-duration: 560ms;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* to ten sam obiekt przed i po — bez przenikania dwóch klatek, tylko przejazd */
+::view-transition-old(.gw-morph) {
+  display: none;
+}
+
+::view-transition-new(.gw-morph) {
+  height: 100%;
+  animation: none;
+}
+
+::view-transition-old(.gw-fade-out) {
+  animation: 180ms ease-in both gw-vt-fade reverse;
+}
+
+::view-transition-new(.gw-fade-in) {
+  animation: 260ms ease-out 200ms both gw-vt-fade;
+}
+
+/* warstwy w trakcie przejścia: okienko najniżej, wątek na szybie, pole pytania na wierzchu */
+::view-transition-group(gw-window) {
+  z-index: 1;
+}
+
+::view-transition-group(gw-thread) {
+  z-index: 2;
+}
+
+::view-transition-group(gw-composer) {
+  z-index: 3;
+}
+
+/* wątek pojawia się dopiero, gdy okienko i pole są prawie na miejscu */
+::view-transition-old(gw-thread) {
+  display: none;
+}
+
+::view-transition-new(gw-thread) {
+  animation:
+    260ms ease-out 300ms both gw-vt-fade,
+    460ms cubic-bezier(0.16, 1, 0.3, 1) 300ms both gw-vt-rise;
+}
+
+@keyframes gw-vt-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes gw-vt-rise {
+  from {
+    transform: translateY(14px);
+  }
+}
+
+/* zmiana motywu: koło odsłaniające nowy motyw animuje ThemeToggle (WAAPI na ::view-transition-new(root)),
+   więc domyślne przenikanie korzenia jest wyłączone */
+html[data-theme-switching]::view-transition-old(root),
+html[data-theme-switching]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

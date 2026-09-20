@@ -34,3 +34,17 @@
 :global(html[data-theme="light"]) .moon {
   display: inline-flex;
 }
+
+/* Po kliknięciu (html[data-lamp] istnieje dopiero po pierwszym przełączeniu) nowa ikona
+   wjeżdża z obrotem — pojawienie się elementu po display:none restartuje animację. */
+:global(html[data-lamp]) .sun,
+:global(html[data-lamp]) .moon {
+  animation: icon-in 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes icon-in {
+  from {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.4);
+  }
+}
