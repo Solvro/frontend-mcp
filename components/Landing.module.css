@@ -82,3 +82,15 @@
     height: 100dvh;
   }
 }
+
+/* znak Solvro w stopce — w ciemnym motywie granat trzeba rozjaśnić */
+.solvroMark {
+  height: 15px;
+  width: auto;
+  opacity: 0.85;
+}
+
+:global([data-theme="dark"]) .solvroMark {
+  filter: brightness(1.7) saturate(0.9);
+  opacity: 0.9;
+}

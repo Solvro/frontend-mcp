@@ -52,7 +52,12 @@ function makeShelfContents() {
 
 const SHELF_CONTENTS = makeShelfContents();
 
-export function RoomInterior() {
+type RoomInteriorProps = {
+  /** Limit pytań wyczerpany — kot przynosi tabliczkę „CLOSED" i zostawia ją na ladzie. */
+  closed?: boolean;
+};
+
+export function RoomInterior({ closed = false }: RoomInteriorProps) {
   return (
     <svg
       className={styles.roomSvg}
@@ -195,6 +200,8 @@ export function RoomInterior() {
         </g>
       </g>
 
+      {closed ? <ClosedSignCat /> : null}
+
       {/* para z kubka — poza rozmyciem głębi, żeby animacja nie przeliczała filtra całego pokoju */}
       <g filter="url(#gw-steam-blur)">
         {[150, 158, 166].map((x) => (
@@ -212,6 +219,65 @@ export function RoomInterior() {
 
       <rect x="0" y="0" width="656" height="328" fill="url(#gw-vignette)" />
     </svg>
+  );
+}
+
+/* Kot wchodzi z prawej z tabliczką w zębach, kładzie ją na ladzie i wychodzi.
+   Tabliczka ma własną oś czasu: do momentu puszczenia jedzie tym samym torem co kot
+   (przesunięta o długość pyska), potem zostaje na ladzie. */
+function ClosedSignCat() {
+  return (
+    <g className={styles.depthBlur} transform="translate(0 258)" aria-hidden="true">
+      <g className={styles.signCarry}>
+        <ellipse className={styles.signShadow} cx="0" cy="1" rx="34" ry="3.5" fill="#000" opacity="0.28" />
+        <g className={styles.signTilt}>
+          <rect x="-33" y="-34" width="66" height="34" rx="2" fill="var(--room-paper)" />
+          <rect x="-33" y="-34" width="66" height="4" rx="2" fill="#000" opacity="0.12" />
+          <text
+            x="0"
+            y="-11"
+            textAnchor="middle"
+            fontSize="12"
+            fontWeight="700"
+            letterSpacing="1"
+            fill="var(--room-board)"
+          >
+            CLOSED
+          </text>
+        </g>
+      </g>
+
+      <g className={styles.catWalk}>
+        <ellipse cx="-4" cy="1" rx="36" ry="4" fill="#000" opacity="0.26" />
+        <g className={styles.catBob}>
+          <g className={styles.catLegBack}>
+            <rect x="12" y="-17" width="9" height="19" rx="4" fill="var(--cat-dark)" />
+          </g>
+          <g className={styles.catLegFront}>
+            <rect x="-24" y="-17" width="9" height="19" rx="4" fill="var(--cat-dark)" />
+          </g>
+
+          <path
+            className={styles.catTail}
+            d="M30 -38 c 18 -4 24 -16 15 -27"
+            fill="none"
+            stroke="var(--cat)"
+            strokeWidth="8"
+            strokeLinecap="round"
+          />
+
+          <circle cx="20" cy="-27" r="17" fill="var(--cat)" />
+          <rect x="-30" y="-44" width="62" height="34" rx="16" fill="var(--cat)" />
+
+          <polygon points="-52,-54 -49,-68 -40,-57" fill="var(--cat)" />
+          <polygon points="-36,-58 -30,-70 -27,-55" fill="var(--cat)" />
+          <circle cx="-40" cy="-46" r="15" fill="var(--cat)" />
+          <circle cx="-50" cy="-39" r="7" fill="var(--cat)" />
+          <circle cx="-50" cy="-39" r="7" fill="#fff" opacity="0.14" />
+          <circle cx="-44" cy="-48" r="2.3" fill="var(--lamp-lit)" />
+        </g>
+      </g>
+    </g>
   );
 }
 

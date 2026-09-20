@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { startTransition, useCallback, useState } from "react";
 import { AuthOverlay } from "./auth/AuthOverlay";
 import { ChatThread } from "./ChatThread";
@@ -130,6 +131,7 @@ export function Landing() {
 
         <div className={styles.scroll}>
           <Scene
+            closed={lockedUntil !== null}
             conversation={
               hasConversation ? (
                 <ChatThread messages={chat.messages} pending={chat.pending} error={lockedUntil === null ? chat.error : null} />
@@ -173,7 +175,15 @@ export function Landing() {
                     <span className={styles.heart}>
                       <HeartIcon size={13} />
                     </span>
-                    by Solvro © 2026
+                    by
+                    <Image
+                      className={styles.solvroMark}
+                      src="/brand/solvro-mark.png"
+                      alt=""
+                      width={124}
+                      height={96}
+                    />
+                    KN Solvro © 2026
                   </footer>
                 )}
               </>

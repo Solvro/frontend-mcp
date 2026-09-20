@@ -397,3 +397,166 @@
     opacity: 0.35;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Kot z tabliczką „CLOSED" — wchodzi z prawej, gdy limit pytań jest wyczerpany,
+   kładzie tabliczkę na ladzie, odwraca się i wychodzi. Tabliczka ma własną oś
+   czasu: do 42% jedzie torem kota (pysk = -52 j.), potem zostaje na ladzie.
+   -------------------------------------------------------------------------- */
+.catWalk {
+  animation: cat-walk 9s linear forwards;
+}
+
+@keyframes cat-walk {
+  0% {
+    transform: translateX(760px) scaleX(1);
+  }
+  36% {
+    transform: translateX(456px) scaleX(1);
+  }
+  46% {
+    transform: translateX(456px) scaleX(1);
+  }
+  52% {
+    transform: translateX(456px) scaleX(-1);
+  }
+  100% {
+    transform: translateX(790px) scaleX(-1);
+  }
+}
+
+.catBob {
+  animation: cat-bob 0.42s ease-in-out infinite alternate;
+}
+
+@keyframes cat-bob {
+  to {
+    transform: translateY(-2px);
+  }
+}
+
+.catLegFront,
+.catLegBack {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  animation: cat-step 0.42s ease-in-out infinite alternate;
+}
+
+.catLegFront {
+  animation-delay: -0.21s;
+}
+
+@keyframes cat-step {
+  from {
+    transform: rotate(18deg);
+  }
+  to {
+    transform: rotate(-18deg);
+  }
+}
+
+.catTail {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  animation: cat-tail 1.6s ease-in-out infinite alternate;
+}
+
+@keyframes cat-tail {
+  from {
+    transform: rotate(-7deg);
+  }
+  to {
+    transform: rotate(8deg);
+  }
+}
+
+.signCarry {
+  animation: sign-carry 9s linear forwards;
+}
+
+@keyframes sign-carry {
+  0% {
+    transform: translateX(690px);
+  }
+  36% {
+    transform: translateX(386px);
+  }
+  100% {
+    transform: translateX(386px);
+  }
+}
+
+/* dynda w pysku, potem kot stawia ją z przodu lady (y +38, tam gdzie stoi kubek) */
+.signTilt {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sign-drop 9s ease-out forwards;
+}
+
+@keyframes sign-drop {
+  0% {
+    transform: translateY(-9px) rotate(5deg);
+  }
+  20% {
+    transform: translateY(-9px) rotate(-3deg);
+  }
+  42% {
+    transform: translateY(-9px) rotate(4deg);
+  }
+  48% {
+    transform: translateY(38px) rotate(-7deg);
+  }
+  52% {
+    transform: translateY(38px) rotate(-3deg);
+  }
+  100% {
+    transform: translateY(38px) rotate(-5deg);
+  }
+}
+
+.signShadow {
+  opacity: 0;
+  animation: sign-shadow 9s linear forwards;
+}
+
+@keyframes sign-shadow {
+  0%,
+  42% {
+    opacity: 0;
+    transform: translateY(38px);
+  }
+  48%,
+  100% {
+    opacity: 0.28;
+    transform: translateY(38px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* bez wędrówki — tabliczka po prostu leży na ladzie */
+  .catWalk {
+    display: none;
+  }
+
+  .signCarry,
+  .signTilt,
+  .signShadow {
+    animation: none;
+  }
+
+  .signCarry {
+    transform: translateX(386px);
+  }
+
+  .signTilt {
+    transform: translateY(38px) rotate(-5deg);
+  }
+
+  .signShadow {
+    transform: translateY(38px);
+  }
+
+  .signShadow {
+    opacity: 0.28;
+  }
+}

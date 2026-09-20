@@ -11,11 +11,13 @@ type SceneProps = {
   below?: ReactNode;
   /** Trwająca rozmowa — okienko schodzi do tła, a wątek przewija się „przez szybę”. */
   conversation?: ReactNode;
+  /** Limit pytań wyczerpany — w pokoju pojawia się kot z tabliczką „CLOSED". */
+  closed?: boolean;
 };
 
 /* Okienko i pole pytania to te same obiekty w obu układach — przy wejściu w rozmowę
    (startTransition w Landing) przejeżdżają na nowe miejsce zamiast przeskakiwać. */
-function WindowFrame() {
+function WindowFrame({ closed }: { closed?: boolean }) {
   return (
     <ViewTransition name="gw-window" default="none" share="gw-morph" update="gw-morph">
       <div className={styles.frame}>
@@ -24,7 +26,7 @@ function WindowFrame() {
         <div className={styles.window}>
           <div className={styles.reveal}>
             <div className={styles.room}>
-              <RoomInterior />
+              <RoomInterior closed={closed} />
               <GlassLayer />
             </div>
           </div>
@@ -45,10 +47,10 @@ function Foreground({ children }: { children: ReactNode }) {
   );
 }
 
-export function Scene({ children, below, conversation }: SceneProps) {
+export function Scene({ children, below, conversation, closed }: SceneProps) {
   if (conversation !== undefined) {
     return (
-      <ConversationScene below={below} conversation={conversation}>
+      <ConversationScene below={below} conversation={conversation} closed={closed}>
         {children}
       </ConversationScene>
     );
@@ -70,7 +72,7 @@ export function Scene({ children, below, conversation }: SceneProps) {
       </ViewTransition>
 
       <div className={styles.sceneWrap}>
-        <WindowFrame />
+        <WindowFrame closed={closed} />
         <Foreground>{children}</Foreground>
       </div>
 
@@ -82,7 +84,7 @@ export function Scene({ children, below, conversation }: SceneProps) {
 /** Jak długo po wejściu w rozmowę wątek ma własną warstwę w view transition. */
 const THREAD_ENTER_MS = 1200;
 
-function ConversationScene({ children, below, conversation }: SceneProps) {
+function ConversationScene({ children, below, conversation, closed }: SceneProps) {
   /* Cała scena rozmowy montuje się w jednym transition, więc React nie odpali `enter`
      zagnieżdżonego <ViewTransition> — wątek trafiłby do zrzutu tła, POD przejeżdżające okienko.
      Dlatego na czas wejścia wątek dostaje własną view-transition-name — inline, bo CSS Modules
@@ -99,7 +101,7 @@ function ConversationScene({ children, below, conversation }: SceneProps) {
 
       {/* nieruchome tło: okienko na środku, niezależne od wątku i pola pytania */}
       <div className={styles.backdrop} aria-hidden="true">
-        <WindowFrame />
+        <WindowFrame closed={closed} />
       </div>
 
       <div
