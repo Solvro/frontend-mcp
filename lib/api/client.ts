@@ -57,6 +57,7 @@ export const api = {
     ),
   listSessions: () => request<ConversationDto[]>("/bff/chat/api/users/me/sessions?limit=50"),
   getHistory: (id: string) => request<MessageDto[]>(`${session(id)}/history`),
+  deleteSession: (id: string) => request<void>(session(id), { method: "DELETE" }),
 
   session: () => request<AuthSession>("/bff/auth/session"),
   login: (email: string, password: string) => post<AuthSession>("/bff/auth/login", { email, password }),

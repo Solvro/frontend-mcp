@@ -3,6 +3,7 @@ import { serviceUrl, type TokenPair } from "@/lib/server/backend";
 import {
   ACCESS_COOKIE,
   EMAIL_COOKIE,
+  NAME_COOKIE,
   REFRESH_COOKIE,
   clearTokens,
   relay,
@@ -24,6 +25,19 @@ function postJson(url: string, body: string, headers: HeadersInit = {}) {
   });
 }
 
+/* Nazwa użytkownika z `/auth/me` — zapisujemy ją w ciasteczku przy logowaniu, więc
+   zmiana nazwy na koncie pokaże się dopiero po ponownym zalogowaniu. Gdyby to zaczęło
+   przeszkadzać, `session` może pytać `/auth/me` przez forwardWithRefresh. */
+async function fetchUsername(auth: string, access: string): Promise<string | null> {
+  const response = await fetch(`${auth}/me`, {
+    headers: { authorization: `Bearer ${access}` },
+    cache: "no-store",
+  }).catch(() => null);
+  if (!response?.ok) return null;
+  const profile = (await response.json().catch(() => null)) as { username?: string } | null;
+  return profile?.username?.trim() || null;
+}
+
 export async function POST(request: NextRequest, { params }: Context) {
   const { action } = await params;
   const auth = `${serviceUrl("auth")}/auth`;
@@ -34,8 +48,9 @@ export async function POST(request: NextRequest, { params }: Context) {
     if (!response.ok) return relay(response);
     const tokens = (await response.json()) as TokenPair;
     const { email } = JSON.parse(body) as { email: string };
-    const out = NextResponse.json({ authenticated: true, email });
-    writeTokens(out, tokens, email);
+    const name = await fetchUsername(auth, tokens.access_token);
+    const out = NextResponse.json({ authenticated: true, email, name });
+    writeTokens(out, tokens, { email, name });
     return out;
   }
 
@@ -66,7 +81,8 @@ export async function GET(request: NextRequest, { params }: Context) {
   if (action === "session") {
     const authenticated = request.cookies.has(REFRESH_COOKIE);
     const email = authenticated ? (request.cookies.get(EMAIL_COOKIE)?.value ?? null) : null;
-    return NextResponse.json({ authenticated, email });
+    const name = authenticated ? (request.cookies.get(NAME_COOKIE)?.value ?? null) : null;
+    return NextResponse.json({ authenticated, email, name });
   }
 
   if (action === "verify") {

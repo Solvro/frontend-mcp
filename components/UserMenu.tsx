@@ -6,20 +6,21 @@ import styles from "./UserMenu.module.css";
 
 type UserMenuProps = {
   email: string;
+  /** Nazwa z konta (`/auth/me`); gdy jej brak, zostaje część adresu przed `@`. */
+  name: string | null;
   onLogout: () => void;
 };
 
-/** Backend nie zwraca nazwy użytkownika (brak `/auth/me`) — pokazujemy część adresu przed `@`. */
 function displayName(email: string) {
   return email.split("@")[0] || email;
 }
 
-export function UserMenu({ email, onLogout }: UserMenuProps) {
+export function UserMenu({ email, name: accountName, onLogout }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuId = useId();
-  const name = displayName(email);
+  const name = accountName?.trim() || displayName(email);
 
   useEffect(() => {
     if (!open) return;

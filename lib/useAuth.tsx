@@ -9,6 +9,8 @@ type AuthStatus = "loading" | "anonymous" | "authenticated";
 type AuthContextValue = {
   status: AuthStatus;
   email: string | null;
+  /** Nazwa użytkownika z konta (`/auth/me`); `null`, gdy backend jej nie podał. */
+  name: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   /** BFF zgłosił wygasłą sesję (401) — przechodzimy w tryb anonimowy. */
@@ -20,6 +22,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [email, setEmail] = useState<string | null>(null);
+  const [name, setName] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         setStatus(session.authenticated ? "authenticated" : "anonymous");
         setEmail(session.email);
+        setName(session.name);
       })
       .catch(() => {
         if (!cancelled) setStatus("anonymous");
@@ -44,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setQuotaLock(null);
     setStatus("authenticated");
     setEmail(session.email);
+    setName(session.name);
   }, []);
 
   const logout = useCallback(async () => {
@@ -51,16 +56,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setQuotaLock(null);
     setStatus("anonymous");
     setEmail(null);
+    setName(null);
   }, []);
 
   const markExpired = useCallback(() => {
     setStatus("anonymous");
     setEmail(null);
+    setName(null);
   }, []);
 
   const value = useMemo(
-    () => ({ status, email, login, logout, markExpired }),
-    [status, email, login, logout, markExpired],
+    () => ({ status, email, name, login, logout, markExpired }),
+    [status, email, name, login, logout, markExpired],
   );
 
   return <AuthContext value={value}>{children}</AuthContext>;

@@ -4,6 +4,7 @@ import type { TokenPair } from "./backend";
 export const ACCESS_COOKIE = "gw_access";
 export const REFRESH_COOKIE = "gw_refresh";
 export const EMAIL_COOKIE = "gw_email";
+export const NAME_COOKIE = "gw_name";
 
 // Czasy życia jak w backendzie (ACCESS_TOKEN_EXPIRE_MINUTES=30, REFRESH_TOKEN_EXPIRE_DAYS=7);
 // access wygasa minutę wcześniej, żeby nie wysłać tokenu na granicy ważności.
@@ -17,14 +18,21 @@ const base = {
   path: "/bff",
 };
 
-export function writeTokens(res: NextResponse, tokens: TokenPair, email?: string): void {
+/** `identity` podajemy tylko przy logowaniu — odświeżenie tokenów jej nie zmienia. */
+export function writeTokens(
+  res: NextResponse,
+  tokens: TokenPair,
+  identity?: { email: string; name: string | null },
+): void {
   res.cookies.set(ACCESS_COOKIE, tokens.access_token, { ...base, maxAge: ACCESS_MAX_AGE });
   res.cookies.set(REFRESH_COOKIE, tokens.refresh_token, { ...base, maxAge: REFRESH_MAX_AGE });
-  if (email) res.cookies.set(EMAIL_COOKIE, email, { ...base, maxAge: REFRESH_MAX_AGE });
+  if (!identity) return;
+  res.cookies.set(EMAIL_COOKIE, identity.email, { ...base, maxAge: REFRESH_MAX_AGE });
+  if (identity.name) res.cookies.set(NAME_COOKIE, identity.name, { ...base, maxAge: REFRESH_MAX_AGE });
 }
 
 export function clearTokens(res: NextResponse): void {
-  for (const name of [ACCESS_COOKIE, REFRESH_COOKIE, EMAIL_COOKIE]) {
+  for (const name of [ACCESS_COOKIE, REFRESH_COOKIE, EMAIL_COOKIE, NAME_COOKIE]) {
     res.cookies.set(name, "", { ...base, maxAge: 0 });
   }
 }

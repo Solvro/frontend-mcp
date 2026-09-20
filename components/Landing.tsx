@@ -10,9 +10,11 @@ import { HeartIcon } from "./Icons";
 import { Scene } from "./Scene";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
+import { api } from "@/lib/api/client";
 import { SUGGESTIONS } from "@/lib/data";
 import { useAuth } from "@/lib/useAuth";
 import { useChat } from "@/lib/useChat";
+import { useConversations } from "@/lib/useConversations";
 import { useQuotaLock } from "@/lib/quotaLock";
 import { useDictation } from "@/lib/useDictation";
 import type { Attachment } from "@/lib/types";
@@ -43,8 +45,11 @@ export function Landing() {
 
   const auth = useAuth();
   const email = auth.status === "authenticated" ? auth.email : null;
+  const name = auth.status === "authenticated" ? auth.name : null;
 
-  const chat = useChat();
+  const conversations = useConversations(auth.status === "authenticated");
+  // Nowa rozmowa dostaje tytuł dopiero po pierwszej odpowiedzi, więc lista odświeża się wtedy.
+  const chat = useChat({ onAnswer: conversations.refresh, onUnauthorized: auth.markExpired });
   /** Limit pytań wyczerpany — do kiedy (epoch ms); `null`, gdy okienko otwarte. */
   const lockedUntil = useQuotaLock();
   /* Przy pierwszym pytaniu scena chwilę wstrzymuje wejście w tryb rozmowy: odmowa (np. 429,
@@ -110,12 +115,29 @@ export function Landing() {
   return (
     <div className={styles.shell}>
       <Sidebar
+        conversations={conversations.groups}
         activeId={chat.sessionId}
-        onSelect={() => setDrawerOpen(false)}
+        onSelect={(id) => {
+          setDrawerOpen(false);
+          void chat.load(id);
+        }}
         onNewChat={startNewChat}
+        onDelete={async (id) => {
+          setStatus(null);
+          try {
+            await api.deleteSession(id);
+          } catch {
+            setStatus("Nie udało się usunąć rozmowy. Spróbuj ponownie.");
+            return;
+          }
+          // Otwarta rozmowa właśnie zniknęła z bazy — ekran wraca na stronę główną.
+          if (chat.sessionId === id) startNewChat();
+          conversations.refresh();
+        }}
         onLogin={openLogin}
         onLogout={() => void auth.logout()}
         email={email}
+        name={name}
         isAuthenticated={auth.status !== "anonymous"}
         isDrawerOpen={drawerOpen}
         onCloseDrawer={() => setDrawerOpen(false)}

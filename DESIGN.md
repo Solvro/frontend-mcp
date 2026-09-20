@@ -200,11 +200,19 @@ Ramki mają zawsze `1px solid`, domyślnie `--border-subtle`.
 - **„Nowa rozmowa”:** 42px wysokości, pełna szerokość, `--accent-brand`, tekst `--text-inverse`; hover `brightness(1.08)`, active `translateY(1px)`.
 - **Szukaj:** 36px, `--surface-sunken`. Widoczne tylko, gdy jest jakakolwiek historia.
 - **Historia:** grupy „Dziś / Wczoraj / Ostatnie 7 dni / Starsze” (w Figmie: Dzisiaj / 7 dni temu / Wcześniej). Element ma 36px, ikonę dymka i ellipsis. Aktywny: `--surface-raised` + ramka, ikona w `--accent-brand`.
+  Lista idzie z backendu (`lib/useConversations.ts` → `/bff/chat/api/users/me/sessions`, grupowanie w
+  `history.groupConversations`), odświeża się po każdej odpowiedzi i po zalogowaniu. Klik wczytuje
+  rozmowę przez `chat.load(id)`. Anonimowy tryb ma pustą listę — backend nie wydaje sesji bez konta.
+- **Usuwanie rozmowy:** kosz 24px po prawej stronie wpisu, widoczny na hover (na dotyku zawsze),
+  hover `--accent-red` na 14% tle. Pierwszy klik zamienia go w ptaszek na czerwonym tle, drugi
+  kasuje (`DELETE /api/sessions/{id}`); brak drugiego kliku w 4 s cofa potwierdzenie. Skasowanie
+  otwartej rozmowy wraca na stronę główną.
 - **Pusty stan:** ikona w kwadracie 38px, „Brak rozmów” i jedno zdanie zachęty.
 - **Karta logowania** (lewy dół): `--surface-raised`, `radius 14px`, tekst 12px, przycisk z obrysem `--border-strong` i tekstem `--accent-blue`, krzyżyk w prawym górnym rogu.
 - **Panel konta** (lewy dół, tylko po zalogowaniu; `UserMenu.tsx`): `--surface-raised`, `radius 14px`, awatar 34px
   (`--accent-brand`, inicjał we Fraunces), nazwa 13px/600 + e-mail 11px `--text-muted`, strzałki góra/dół.
-  Nazwa to część e-maila przed `@`, bo backend nie zwraca nazwy użytkownika. Klik rozwija nad panelem menu
+  Nazwa pochodzi z `/auth/me` (BFF pyta o nią przy logowaniu i trzyma w ciasteczku `gw_name`);
+  gdy backend jej nie poda, zostaje część e-maila przed `@`. Klik rozwija nad panelem menu
   (`--surface-card`, cień karty, wejście 0.16 s): „Ustawienia” (wyłączone, etykieta mono „WKRÓTCE”) i „Wyloguj”
   w `--accent-red`. Zamyka się Escape'em i kliknięciem obok. Ekran logowania zwija się do tego panelu.
 

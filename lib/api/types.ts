@@ -26,7 +26,7 @@ export type MessageDto = {
   metadata: Record<string, unknown>;
 };
 
-export type AuthSession = { authenticated: boolean; email: string | null };
+export type AuthSession = { authenticated: boolean; email: string | null; name: string | null };
 
 /** Stan dziennego limitu pytań po ostatniej odpowiedzi. */
 export type QuotaInfo = { remaining: number; resetSeconds: number };

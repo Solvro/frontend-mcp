@@ -140,13 +140,59 @@
   gap: 10px;
   width: 100%;
   height: 36px;
-  padding: 0 12px;
+  padding: 0 34px 0 12px;
   border-radius: 10px;
   border: 1px solid transparent;
   color: var(--text-secondary);
   font-size: 12.5px;
   text-align: left;
   transition: background 0.14s ease, color 0.14s ease;
+}
+
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Kosz leży nad elementem listy (zagnieżdżony <button> byłby niepoprawnym HTML-em),
+   a stałe miejsce na niego trzyma `padding-right` — inaczej tytuł skakałby na hover. */
+.remove {
+  position: absolute;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.14s ease, background 0.14s ease, color 0.14s ease;
+}
+
+.row:hover .remove,
+.remove:focus-visible {
+  opacity: 1;
+}
+
+.remove:hover {
+  background: color-mix(in srgb, var(--accent-red) 14%, transparent);
+  color: var(--accent-red);
+}
+
+.removeConfirm,
+.row:hover .removeConfirm {
+  opacity: 1;
+  background: var(--accent-red);
+  color: var(--text-inverse);
+}
+
+/* Dotyk nie ma hoveru — na telefonie kosz jest widoczny od razu. */
+@media (hover: none) {
+  .remove {
+    opacity: 1;
+  }
 }
 
 .item span {

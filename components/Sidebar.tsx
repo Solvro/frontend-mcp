@@ -1,49 +1,75 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { GraphMark, LoginIcon, MessageIcon, PlusIcon, SearchIcon, XIcon } from "./Icons";
-import { CONVERSATION_GROUPS } from "@/lib/data";
+import { useEffect, useMemo, useState } from "react";
+import {
+  CheckIcon,
+  GraphMark,
+  LoginIcon,
+  MessageIcon,
+  PlusIcon,
+  SearchIcon,
+  TrashIcon,
+  XIcon,
+} from "./Icons";
 import { UserMenu } from "./UserMenu";
+import type { ConversationGroup } from "@/lib/types";
 import styles from "./Sidebar.module.css";
 
 type SidebarProps = {
+  /** Historia rozmów pogrupowana po dacie; pusta dla trybu anonimowego. */
+  conversations: ConversationGroup[];
   activeId: string | null;
   onSelect: (id: string) => void;
   onNewChat: () => void;
+  onDelete: (id: string) => void;
   onLogin: (trigger: HTMLElement) => void;
   onLogout: () => void;
   /** Zalogowany użytkownik; `null` — tryb anonimowy albo sesja jeszcze się wczytuje. */
   email: string | null;
+  /** Nazwa użytkownika z konta; `null` — pokazujemy część adresu przed `@`. */
+  name: string | null;
   isAuthenticated: boolean;
   isDrawerOpen: boolean;
   onCloseDrawer: () => void;
 };
 
 export function Sidebar({
+  conversations,
   activeId,
   onSelect,
   onNewChat,
+  onDelete,
   onLogin,
   onLogout,
   email,
+  name,
   isAuthenticated,
   isDrawerOpen,
   onCloseDrawer,
 }: SidebarProps) {
   const [query, setQuery] = useState("");
   const [showLoginCard, setShowLoginCard] = useState(true);
+  /* Kasowanie na dwa kliknięcia: kosz zamienia się w ptaszek. Bez `confirm()`, bo blokuje
+     wątek i wygląda jak alert przeglądarki, i bez modala dla jednej pozycji listy. */
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
-  const hasHistory = CONVERSATION_GROUPS.length > 0;
+  useEffect(() => {
+    if (confirmId === null) return;
+    const timer = window.setTimeout(() => setConfirmId(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [confirmId]);
+
+  const hasHistory = conversations.length > 0;
 
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return CONVERSATION_GROUPS;
-    return CONVERSATION_GROUPS.map((group) => ({
+    if (!q) return conversations;
+    return conversations.map((group) => ({
       ...group,
       items: group.items.filter((item) => item.title.toLowerCase().includes(q)),
     })).filter((group) => group.items.length > 0);
-  }, [query]);
+  }, [conversations, query]);
 
   return (
     <>
@@ -114,8 +140,9 @@ export function Sidebar({
               <ul className={styles.list}>
                 {group.items.map((item) => {
                   const isActive = item.id === activeId;
+                  const isConfirming = item.id === confirmId;
                   return (
-                    <li key={item.id}>
+                    <li key={item.id} className={styles.row}>
                       <button
                         type="button"
                         className={`${styles.item} ${isActive ? styles.itemActive : ""}`}
@@ -126,6 +153,25 @@ export function Sidebar({
                           <MessageIcon size={14} />
                         </span>
                         <span>{item.title}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.remove} ${isConfirming ? styles.removeConfirm : ""}`}
+                        aria-label={
+                          isConfirming
+                            ? `Potwierdź usunięcie rozmowy: ${item.title}`
+                            : `Usuń rozmowę: ${item.title}`
+                        }
+                        onClick={() => {
+                          if (!isConfirming) {
+                            setConfirmId(item.id);
+                            return;
+                          }
+                          setConfirmId(null);
+                          onDelete(item.id);
+                        }}
+                      >
+                        {isConfirming ? <CheckIcon size={13} /> : <TrashIcon size={13} />}
                       </button>
                     </li>
                   );
@@ -159,7 +205,7 @@ export function Sidebar({
           </div>
         )}
 
-        {email && <UserMenu email={email} onLogout={onLogout} />}
+        {email && <UserMenu email={email} name={name} onLogout={onLogout} />}
       </aside>
     </>
   );
