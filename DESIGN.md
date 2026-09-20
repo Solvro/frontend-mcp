@@ -156,7 +156,7 @@ Bazowo: `14px / 1.45`, antialiasing włączony.
 │              │        [chip] [chip] [chip] [chip]                  │
 │ karta        │        notka o źródłach                             │
 │ logowania    │                                                     │
-│              │        Made with ♥ by Solvro © 2026                 │
+│              │        Made with ♥ by KN Solvro © 2026              │
 └──────────────┴─────────────────────────────────────────────────────┘
 ```
 
@@ -218,7 +218,10 @@ Ramki mają zawsze `1px solid`, domyślnie `--border-subtle`.
   wtedy zablokowany z podpowiedzią „Limit pytań wyczerpany”, a pod nim stoi czerwony komunikat
   `QuotaNotice`: „**Osiągnięto limit pytań.** Reset za **7 h 44 min**.” (odliczanie, tło `--accent-red` 10%
   na `--surface-card`; niezalogowani mają przy nim przycisk „Zaloguj się”). Zastępuje zwykły dymek błędu. Logowanie i wylogowanie zdejmują blokadę
-  (limit liczy się per konto).
+  (limit liczy się per konto). W okienku pojawia się wtedy **szary kot z tabliczką „CLOSED”**: wchodzi z prawej
+  po ladzie, stawia tabliczkę na przodzie lady (obok kubka), odwraca się i wychodzi
+  (9 s, raz na wejście sceny); tabliczka zostaje oparta i przechylona.
+  Przy `prefers-reduced-motion` kota nie ma — tabliczka po prostu leży na ladzie.
 - Po prawej przełącznik motywu (38px, `radius 11px`; ikona księżyc/słońce wynika z CSS, bez stanu Reacta) i przycisk „Zaloguj się” (`--surface-card`, obrys `--border-strong`), widoczny tylko dla niezalogowanych. Wylogowanie jest w panelu konta w sidebarze.
 
 ### Scena (`Scene.tsx`, `RoomArt.tsx`)
@@ -253,7 +256,9 @@ Ramki mają zawsze `1px solid`, domyślnie `--border-subtle`.
 - Po każdej nowej wiadomości strona płynnie przewija się na dół.
 
 ### Stopka
-`Made with ♥ by Solvro © 2026`, 12px `--text-muted`. Serce to `HeartIcon` w `--accent-red`.
+`Made with ♥ by [znak Solvro] KN Solvro © 2026`, 12px `--text-muted`. Serce to `HeartIcon` w `--accent-red`,
+znak Solvro to `public/brand/solvro-mark.png` (15px wysokości, `opacity 0.85`; w ciemnym motywie
+rozjaśniony filtrem, bo granat gubi się na tle).
 
 ---
 

@@ -51,6 +51,8 @@
   --note: #e9d48a;
   --lamp-on: 0;
   --coffee: #4a2e1a;
+  --cat: #7a736a;
+  --cat-dark: #5d574f;
 
   --shadow-a: 0.16;
   --scene-shadow-a: 0.18;
@@ -120,6 +122,8 @@
     --note: #c9a94e;
     --lamp-on: 1;
     --coffee: #2e1d12;
+    --cat: #5b6472;
+    --cat-dark: #454c58;
 
     --shadow-a: 0.55;
     --scene-shadow-a: 0.5;
@@ -185,6 +189,8 @@
   --note: #c9a94e;
   --lamp-on: 1;
   --coffee: #2e1d12;
+  --cat: #5b6472;
+  --cat-dark: #454c58;
 
   --shadow-a: 0.55;
   --scene-shadow-a: 0.5;

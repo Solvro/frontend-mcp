@@ -41,6 +41,7 @@ npx tsc --noEmit
 
 - `public/brand/logo_pwr.png` — logo Politechniki Wrocławskiej (czerwień `#A5140F`, kremowy `#F5CFA0`)
 - `public/brand/38877128.jpeg` — logo Solvro (granat `#1B2E4F`, błękit `#7BA7E8`)
+- `public/brand/solvro-mark.png` — sam znak Solvro z przezroczystym tłem (do stopki)
 
 ## Design — wymagania produktowe
 
