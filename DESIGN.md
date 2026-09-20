@@ -196,12 +196,17 @@ Ramki mają zawsze `1px solid`, domyślnie `--border-subtle`.
 
 ### Sidebar (`Sidebar.tsx`)
 - Tło `--surface-sidebar`, prawa ramka `--border-subtle`, padding `22px 20px 20px`.
-- **Marka:** kwadrat 32px, `radius 9px`, tło `--accent-brand`, znak grafu (`GraphMark`) + dwie linie tekstu.
+- **Marka:** kwadrat 32px, `radius 9px`, tło `--accent-brand`, znak grafu (`GraphMark`) + dwie linie tekstu. Całość to link `/`: kliknięcie wraca na stronę główną (to samo co „Nowa rozmowa”, z przejściem), hover rozjaśnia znak.
 - **„Nowa rozmowa”:** 42px wysokości, pełna szerokość, `--accent-brand`, tekst `--text-inverse`; hover `brightness(1.08)`, active `translateY(1px)`.
 - **Szukaj:** 36px, `--surface-sunken`. Widoczne tylko, gdy jest jakakolwiek historia.
 - **Historia:** grupy „Dziś / Wczoraj / Ostatnie 7 dni / Starsze” (w Figmie: Dzisiaj / 7 dni temu / Wcześniej). Element ma 36px, ikonę dymka i ellipsis. Aktywny: `--surface-raised` + ramka, ikona w `--accent-brand`.
 - **Pusty stan:** ikona w kwadracie 38px, „Brak rozmów” i jedno zdanie zachęty.
 - **Karta logowania** (lewy dół): `--surface-raised`, `radius 14px`, tekst 12px, przycisk z obrysem `--border-strong` i tekstem `--accent-blue`, krzyżyk w prawym górnym rogu.
+- **Panel konta** (lewy dół, tylko po zalogowaniu; `UserMenu.tsx`): `--surface-raised`, `radius 14px`, awatar 34px
+  (`--accent-brand`, inicjał we Fraunces), nazwa 13px/600 + e-mail 11px `--text-muted`, strzałki góra/dół.
+  Nazwa to część e-maila przed `@`, bo backend nie zwraca nazwy użytkownika. Klik rozwija nad panelem menu
+  (`--surface-card`, cień karty, wejście 0.16 s): „Ustawienia” (wyłączone, etykieta mono „WKRÓTCE”) i „Wyloguj”
+  w `--accent-red`. Zamyka się Escape'em i kliknięciem obok. Ekran logowania zwija się do tego panelu.
 
 ### Topbar (`Topbar.tsx`)
 - 68px, tło `--bg-page`, dolna ramka.
@@ -214,7 +219,7 @@ Ramki mają zawsze `1px solid`, domyślnie `--border-subtle`.
   `QuotaNotice`: „**Osiągnięto limit pytań.** Reset za **7 h 44 min**.” (odliczanie, tło `--accent-red` 10%
   na `--surface-card`; niezalogowani mają przy nim przycisk „Zaloguj się”). Zastępuje zwykły dymek błędu. Logowanie i wylogowanie zdejmują blokadę
   (limit liczy się per konto).
-- Po prawej przełącznik motywu (38px, `radius 11px`; ikona księżyc/słońce wynika z CSS, bez stanu Reacta) i przycisk „Zaloguj się” (`--surface-card`, obrys `--border-strong`).
+- Po prawej przełącznik motywu (38px, `radius 11px`; ikona księżyc/słońce wynika z CSS, bez stanu Reacta) i przycisk „Zaloguj się” (`--surface-card`, obrys `--border-strong`), widoczny tylko dla niezalogowanych. Wylogowanie jest w panelu konta w sidebarze.
 
 ### Scena (`Scene.tsx`, `RoomArt.tsx`)
 - Ściana: `linear-gradient(to bottom, --wall-top, --wall-bottom)`.
@@ -255,7 +260,7 @@ Ramki mają zawsze `1px solid`, domyślnie `--border-subtle`.
 ## 6. Ikony
 
 - Własny zestaw SVG w `components/Icons.tsx`: `viewBox 24`, `stroke 1.9`, zaokrąglone końce, `currentColor`, domyślnie 18px (w UI 13–20px).
-- Dostępne: Plus, Search, Message, Mic, Login, Moon, Sun, Clock, Paperclip, ArrowUp, File, Image, X, Menu, GraphMark, Heart.
+- Dostępne: Plus, Search, Message, Mic, Login, Logout, Settings, ChevronUpDown, Moon, Sun, Clock, Paperclip, ArrowUp, File, Image, X, Menu, GraphMark, Heart.
 - **Nigdy emoji jako ikony.**
 
 ---
@@ -322,4 +327,4 @@ są statyczne.
 | historia w sidebarze | 8 przykładowych rozmów, grupy Dzisiaj / 7 dni temu / Wcześniej | dane z backendu; nowy użytkownik widzi pusty stan „Brak rozmów”; grupy Dziś / Wczoraj / Ostatnie 7 dni / Starsze |
 | załączniki w composerze | 2 chipy + spinacz + „PDF, DOCX, PNG — do 20 MB” | ukryte; podpowiedź „Enter — wyślij · Shift+Enter — nowa linia” |
 | wątek rozmowy | brak ekranu | `ChatThread` (dymki, „Szukam w segregatorach…”) |
-| stany logowania | tylko „Zaloguj się” | pełnoekranowe logowanie / rejestracja / reset hasła (lewa kolumna z nagłówkiem, po prawej okienko „DZIEKANAT · LOGOWANIE” z kartą formularza na parapecie); w topbarze „Wyloguj” |
+| stany logowania | tylko „Zaloguj się” | pełnoekranowe logowanie / rejestracja / reset hasła (lewa kolumna z nagłówkiem, po prawej okienko „DZIEKANAT · LOGOWANIE” z kartą formularza na parapecie); po zalogowaniu panel konta w lewym dolnym rogu (Ustawienia — wkrótce, Wyloguj) |

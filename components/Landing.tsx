@@ -113,17 +113,18 @@ export function Landing() {
         onSelect={() => setDrawerOpen(false)}
         onNewChat={startNewChat}
         onLogin={openLogin}
-        isAuthenticated={auth.status === "authenticated"}
+        onLogout={() => void auth.logout()}
+        email={email}
+        isAuthenticated={auth.status !== "anonymous"}
         isDrawerOpen={drawerOpen}
         onCloseDrawer={() => setDrawerOpen(false)}
       />
 
       <div className={styles.main}>
         <Topbar
-          email={email}
+          showLogin={auth.status === "anonymous"}
           lockedUntil={lockedUntil}
           onLogin={openLogin}
-          onLogout={() => void auth.logout()}
           onOpenDrawer={() => setDrawerOpen(true)}
         />
 
