@@ -6,9 +6,9 @@
 (Politechnika Wrocławska). Backend: MCP + warstwa ML (osobne repo, `../`).
 Organizacja: **Solvro** (koło naukowe PWR).
 
-**Aktualny etap:** design w Figmie jest zaimplementowany jako strona w Next.js.
-Backendu (API asystenta, logowanie) jeszcze nie ma — miejsca styku oznaczone `TODO`
-w `components/Landing.tsx` i `lib/data.ts`.
+**Aktualny etap:** design z Figmy zaimplementowany w Next.js i podłączony do backendu
+(`backend-mcp`) przez BFF: czat, logowanie/rejestracja, historia rozmów z usuwaniem.
+Uruchomienie i architektura dla ludzi: `README.md`.
 
 ## Stack i komendy
 
@@ -35,7 +35,7 @@ npx tsc --noEmit
   załączniki z drag&drop i usuwaniem
 - `components/Sidebar.tsx` — historia rozmów (z backendu przez `lib/useConversations.ts`),
   wyszukiwarka, zamykany popup logowania; poniżej 1024 px zmienia się w szufladę
-- `lib/useDictation.ts` — dyktowanie przez Web Speech API (`pl-PL`), z cichym fallbackiem
+- `lib/useDictation.ts` — dyktowanie przez Web Speech API (`pl-PL`); bez API mikrofon jest ukryty
 
 ## Zasoby w repo
 
@@ -91,7 +91,7 @@ Figma jest źródłem prawdy dla wyglądu — zmiany wizualne nanoś w obu miejs
 - Nazewnictwo warstw po angielsku, teksty w UI po polsku
 - Po każdej większej zmianie pokaż użytkownikowi screenshot przed pytaniem o dalsze kroki
 
-## Integracja z backendem (plan z 2026-09-18, status: do realizacji)
+## Integracja z backendem (plan z 2026-09-18, zrealizowany)
 
 Plan krok po kroku: `docs/superpowers/plans/2026-09-18-frontend-backend-integration.md`.
 
@@ -100,12 +100,14 @@ Plan krok po kroku: `docs/superpowers/plans/2026-09-18-frontend-backend-integrat
   Start: `cd ../ml-mcp && just up-dev`, potem `cd ../backend-mcp && just up`.
 - Architektura: przeglądarka woła tylko `/bff/*` (route handlery Next) → brak CORS i self-signed TLS;
   tokeny w ciasteczkach `httpOnly` (`gw_access`, `gw_refresh`, `gw_email`, `gw_name`, path `/bff`), auto-refresh w BFF.
-  Env: `CHAT_SERVICE_URL`, `AUTH_SERVICE_URL` (`.env.example`).
+  Env: `CHAT_SERVICE_URL`, `AUTH_SERVICE_URL`, `BFF_TRUST_PROXY` (`.env.example`).
+  Równoległe refreshe dzielą jedną rotację (`lib/server/backend.ts`) — backend unieważnia
+  całą rodzinę tokenów przy ponownym użyciu starego refresh tokenu.
 - Braki backendu (frontend je obchodzi / ukrywa): brak uploadu plików (spinacz ukryty), brak streamingu,
   brak tytułu rozmowy (wysyłamy `metadata.title`), brak źródeł w odpowiedzi,
   `docker/compose.yml` nie przekazuje kluczy LLM do chat-service, anonimowa rozmowa nie przechodzi
   na konto po zalogowaniu (jej sesje mają `user_id: null` i nie wchodzą do historii),
-  rate limit per IP za BFF wymaga `FORWARDED_ALLOW_IPS` w prod.
+  rate limit per IP za BFF wymaga `BFF_TRUST_PROXY=1` i IP serwera Next w `FORWARDED_ALLOW_IPS`.
 - Daty z backendu to UTC bez strefy — parsuj przez `parseBackendDate` (dokleja `Z`).
 
 ## Git

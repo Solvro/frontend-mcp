@@ -31,7 +31,8 @@ type ComposerProps = {
   onRemoveAttachment: (id: string) => void;
   onSend: () => void;
   listening: boolean;
-  onToggleListening: () => void;
+  /** Brak — przeglądarka nie ma Web Speech API, więc nie pokazujemy mikrofonu. */
+  onToggleListening?: () => void;
   /** Czekamy na odpowiedź albo okienko jest zamknięte — pisać można, wysłać nie. */
   disabled?: boolean;
   /** Podpowiedź przy zablokowanym wysyłaniu (domyślnie „Czekam na odpowiedź…”). */
@@ -177,15 +178,17 @@ export function Composer({
             </button>
           </>
         )}
-        <button
-          type="button"
-          className={`${styles.iconButton} ${listening ? styles.listening : ""}`}
-          onClick={onToggleListening}
-          aria-pressed={listening}
-          aria-label={listening ? "Zatrzymaj dyktowanie" : "Zadaj pytanie głosem"}
-        >
-          <MicIcon />
-        </button>
+        {onToggleListening && (
+          <button
+            type="button"
+            className={`${styles.iconButton} ${listening ? styles.listening : ""}`}
+            onClick={onToggleListening}
+            aria-pressed={listening}
+            aria-label={listening ? "Zatrzymaj dyktowanie" : "Zadaj pytanie głosem"}
+          >
+            <MicIcon />
+          </button>
+        )}
 
         <p className={styles.hint}>{hint}</p>
 

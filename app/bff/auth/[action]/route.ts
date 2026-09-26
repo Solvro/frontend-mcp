@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { serviceUrl, type TokenPair } from "@/lib/server/backend";
+import { forwardWithRefresh, forwardedFor, serviceUrl, type TokenPair } from "@/lib/server/backend";
 import {
   ACCESS_COOKIE,
   EMAIL_COOKIE,
@@ -7,6 +7,7 @@ import {
   REFRESH_COOKIE,
   clearTokens,
   relay,
+  upstreamUnavailable,
   writeTokens,
 } from "@/lib/server/session";
 
@@ -38,13 +39,13 @@ async function fetchUsername(auth: string, access: string): Promise<string | nul
   return profile?.username?.trim() || null;
 }
 
-export async function POST(request: NextRequest, { params }: Context) {
+async function handlePost(request: NextRequest, { params }: Context) {
   const { action } = await params;
   const auth = `${serviceUrl("auth")}/auth`;
 
   if (action === "login") {
     const body = await request.text();
-    const response = await postJson(`${auth}/login`, body);
+    const response = await postJson(`${auth}/login`, body, forwardedFor(request.headers));
     if (!response.ok) return relay(response);
     const tokens = (await response.json()) as TokenPair;
     const { email } = JSON.parse(body) as { email: string };
@@ -56,11 +57,23 @@ export async function POST(request: NextRequest, { params }: Context) {
 
   if (action === "logout") {
     const access = request.cookies.get(ACCESS_COOKIE)?.value;
-    const refresh = request.cookies.get(REFRESH_COOKIE)?.value ?? null;
-    if (access) {
-      // Wylogowanie lokalne ma się udać nawet przy niedostępnym backendzie.
-      await postJson(`${auth}/logout`, JSON.stringify({ refresh_token: refresh }), {
-        authorization: `Bearer ${access}`,
+    const refresh = request.cookies.get(REFRESH_COOKIE)?.value;
+    if (access || refresh) {
+      /* Po 29 min access cookie już nie ma, a /auth/logout wymaga Bearer — bez odświeżenia
+         refresh token zostałby ważny w backendzie jeszcze 7 dni. Stary refresh w body
+         wystarcza: backend unieważnia całą rodzinę, łącznie z tokenem z tej rotacji.
+         Wylogowanie lokalne ma się udać nawet przy niedostępnym backendzie. */
+      await forwardWithRefresh({
+        url: `${auth}/logout`,
+        init: {
+          method: "POST",
+          headers: { "content-type": "application/json", ...forwardedFor(request.headers) },
+          body: JSON.stringify({ refresh_token: refresh ?? null }),
+          cache: "no-store",
+        },
+        accessToken: access,
+        refreshToken: refresh,
+        refreshUrl: `${auth}/refresh`,
       }).catch(() => undefined);
     }
     const out = new NextResponse(null, { status: 204 });
@@ -69,13 +82,13 @@ export async function POST(request: NextRequest, { params }: Context) {
   }
 
   if (PASS_THROUGH.has(action)) {
-    return relay(await postJson(`${auth}/${action}`, await request.text()));
+    return relay(await postJson(`${auth}/${action}`, await request.text(), forwardedFor(request.headers)));
   }
 
   return notFound();
 }
 
-export async function GET(request: NextRequest, { params }: Context) {
+async function handleGet(request: NextRequest, { params }: Context) {
   const { action } = await params;
 
   if (action === "session") {
@@ -88,8 +101,12 @@ export async function GET(request: NextRequest, { params }: Context) {
   if (action === "verify") {
     const token = request.nextUrl.searchParams.get("token") ?? "";
     const url = `${serviceUrl("auth")}/auth/verify?token=${encodeURIComponent(token)}`;
-    return relay(await fetch(url, { cache: "no-store" }));
+    return relay(await fetch(url, { headers: forwardedFor(request.headers), cache: "no-store" }));
   }
 
   return notFound();
 }
+
+export const POST = (request: NextRequest, context: Context) =>
+  handlePost(request, context).catch(upstreamUnavailable);
+export const GET = (request: NextRequest, context: Context) => handleGet(request, context).catch(upstreamUnavailable);

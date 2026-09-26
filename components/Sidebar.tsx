@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CheckIcon,
   GraphMark,
@@ -60,6 +60,35 @@ export function Sidebar({
     return () => window.clearTimeout(timer);
   }, [confirmId]);
 
+  /* Szuflada (< 1024 px): fokus wchodzi do środka i wraca do przycisku, który ją otworzył;
+     reszta strony jest `inert` (w Landing), Escape zamyka. */
+  const newChatRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!isDrawerOpen) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    newChatRef.current?.focus();
+    return () => opener?.focus();
+  }, [isDrawerOpen]);
+
+  useEffect(() => {
+    if (!isDrawerOpen) return;
+    const mobile = window.matchMedia("(max-width: 1024px)");
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.defaultPrevented) onCloseDrawer();
+    };
+    // po poszerzeniu okna szuflady nie ma — bez tego `inert` zostałby na treści
+    const onResize = () => {
+      if (!mobile.matches) onCloseDrawer();
+    };
+    // na window, nie document: menu konta (listener na document) dostaje Escape pierwsze
+    window.addEventListener("keydown", onKeyDown);
+    mobile.addEventListener("change", onResize);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      mobile.removeEventListener("change", onResize);
+    };
+  }, [isDrawerOpen, onCloseDrawer]);
+
   const hasHistory = conversations.length > 0;
 
   const groups = useMemo(() => {
@@ -98,7 +127,7 @@ export function Sidebar({
           </span>
         </Link>
 
-        <button type="button" className={styles.newChat} onClick={onNewChat}>
+        <button type="button" ref={newChatRef} className={styles.newChat} onClick={onNewChat}>
           <PlusIcon size={16} />
           Nowa rozmowa
         </button>
