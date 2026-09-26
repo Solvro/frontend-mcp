@@ -113,3 +113,20 @@ export async function forwardWithRefresh({
   if (response.status === 401) return expired();
   return { response, tokens, expired: false };
 }
+
+/**
+ * IP klienta dla limitów w backendzie (limit pytań anonimowych, logowania). Next nie zna
+ * adresu gniazda — podaje go proxy/hosting przed BFF. Proxy *dopisuje* adres na końcu
+ * `X-Forwarded-For`, więc wcześniejsze wpisy ustawił sam klient; bierzemy tylko ostatni,
+ * inaczej dowolny nagłówek od klienta omijałby limit.
+ */
+export function clientIp(headers: Headers): string | null {
+  const chain = headers.get("x-forwarded-for")?.split(",").map((part) => part.trim()).filter(Boolean);
+  return chain?.at(-1) ?? headers.get("x-real-ip")?.trim() ?? null;
+}
+
+/** Nagłówek `X-Forwarded-For` z jednym, zaufanym adresem — do żądań BFF → serwis. */
+export function forwardedFor(headers: Headers): Record<string, string> {
+  const ip = clientIp(headers);
+  return ip ? { "x-forwarded-for": ip } : {};
+}

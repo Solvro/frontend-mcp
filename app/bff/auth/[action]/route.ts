@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { serviceUrl, type TokenPair } from "@/lib/server/backend";
+import { forwardedFor, serviceUrl, type TokenPair } from "@/lib/server/backend";
 import {
   ACCESS_COOKIE,
   EMAIL_COOKIE,
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest, { params }: Context) {
 
   if (action === "login") {
     const body = await request.text();
-    const response = await postJson(`${auth}/login`, body);
+    const response = await postJson(`${auth}/login`, body, forwardedFor(request.headers));
     if (!response.ok) return relay(response);
     const tokens = (await response.json()) as TokenPair;
     const { email } = JSON.parse(body) as { email: string };
@@ -60,6 +60,7 @@ export async function POST(request: NextRequest, { params }: Context) {
     if (access) {
       // Wylogowanie lokalne ma się udać nawet przy niedostępnym backendzie.
       await postJson(`${auth}/logout`, JSON.stringify({ refresh_token: refresh }), {
+        ...forwardedFor(request.headers),
         authorization: `Bearer ${access}`,
       }).catch(() => undefined);
     }
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest, { params }: Context) {
   }
 
   if (PASS_THROUGH.has(action)) {
-    return relay(await postJson(`${auth}/${action}`, await request.text()));
+    return relay(await postJson(`${auth}/${action}`, await request.text(), forwardedFor(request.headers)));
   }
 
   return notFound();
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest, { params }: Context) {
   if (action === "verify") {
     const token = request.nextUrl.searchParams.get("token") ?? "";
     const url = `${serviceUrl("auth")}/auth/verify?token=${encodeURIComponent(token)}`;
-    return relay(await fetch(url, { cache: "no-store" }));
+    return relay(await fetch(url, { headers: forwardedFor(request.headers), cache: "no-store" }));
   }
 
   return notFound();

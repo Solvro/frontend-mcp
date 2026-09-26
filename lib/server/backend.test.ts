@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { forwardWithRefresh, serviceUrl } from "./backend";
+import { clientIp, forwardWithRefresh, serviceUrl } from "./backend";
 
 type Call = { url: string; auth: string | null };
 
@@ -98,5 +98,21 @@ describe("forwardWithRefresh", () => {
     await expect(forwardWithRefresh({ ...base, refreshToken: "r-flaky", fetchImpl: impl })).rejects.toThrow();
     const result = await forwardWithRefresh({ ...base, refreshToken: "r-flaky", fetchImpl: impl });
     expect(result.tokens).toEqual(rotated);
+  });
+});
+
+describe("clientIp", () => {
+  const ip = (init: Record<string, string>) => clientIp(new Headers(init));
+
+  it("takes the address appended by the last proxy, not the client-supplied ones", () => {
+    expect(ip({ "x-forwarded-for": "6.6.6.6, 203.0.113.7" })).toBe("203.0.113.7");
+  });
+
+  it("falls back to x-real-ip", () => {
+    expect(ip({ "x-real-ip": "203.0.113.8" })).toBe("203.0.113.8");
+  });
+
+  it("returns null without proxy headers", () => {
+    expect(ip({})).toBeNull();
   });
 });
