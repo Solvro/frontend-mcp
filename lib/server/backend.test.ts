@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { clientIp, forwardWithRefresh, serviceUrl } from "./backend";
+import { clientIp, forwardWithRefresh, forwardedFor, serviceUrl } from "./backend";
 
 type Call = { url: string; auth: string | null };
 
@@ -111,6 +111,13 @@ describe("forwardWithRefresh", () => {
     expect(replay.tokens).toEqual(rotated);
   });
 
+  it("does not keep a rejected refresh token in memory", async () => {
+    const { impl, calls } = fakeFetch([unauthorized(), unauthorized()]);
+    await forwardWithRefresh({ ...base, refreshToken: "r-garbage", fetchImpl: impl });
+    await forwardWithRefresh({ ...base, refreshToken: "r-garbage", fetchImpl: impl });
+    expect(calls.filter((c) => c.url === base.refreshUrl)).toHaveLength(2);
+  });
+
   it("does not remember a refresh that failed on the network", async () => {
     let attempts = 0;
     const impl = (async (input: RequestInfo | URL) => {
@@ -138,5 +145,17 @@ describe("clientIp", () => {
 
   it("returns null without proxy headers", () => {
     expect(ip({})).toBeNull();
+  });
+});
+
+describe("forwardedFor", () => {
+  const headers = new Headers({ "x-forwarded-for": "6.6.6.6, 203.0.113.7" });
+
+  it("sends nothing unless a trusted proxy is declared", () => {
+    expect(forwardedFor(headers, {})).toEqual({});
+  });
+
+  it("sends only the proxy-appended address behind a trusted proxy", () => {
+    expect(forwardedFor(headers, { BFF_TRUST_PROXY: "1" })).toEqual({ "x-forwarded-for": "203.0.113.7" });
   });
 });

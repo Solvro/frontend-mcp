@@ -31,6 +31,7 @@ const chatCtx = (...path: string[]) => ({ params: Promise.resolve({ path }) });
 beforeEach(() => {
   vi.stubEnv("AUTH_SERVICE_URL", "http://auth");
   vi.stubEnv("CHAT_SERVICE_URL", "http://chat");
+  vi.stubEnv("BFF_TRUST_PROXY", "1");
   vi.spyOn(console, "error").mockImplementation(() => undefined);
 });
 

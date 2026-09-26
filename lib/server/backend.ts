@@ -69,8 +69,9 @@ function refreshTokens(
   const forget = () => {
     if (refreshes.get(refreshToken) === refresh) refreshes.delete(refreshToken);
   };
-  // błąd sieci nie zostaje w pamięci — następne żądanie spróbuje od nowa
-  refresh.catch(forget);
+  /* Pamiętamy tylko udaną rotację. Odmowa (401) i błąd sieci znikają od razu: następne
+     żądanie spróbuje od nowa, a śmieciowe ciasteczka nie zapychają pamięci przez 30 s. */
+  refresh.then((tokens) => tokens ?? forget(), forget);
   setTimeout(forget, REFRESH_REUSE_MS).unref?.();
   return refresh;
 }
@@ -128,8 +129,17 @@ export function clientIp(headers: Headers): string | null {
   return chain?.at(-1) ?? headers.get("x-real-ip")?.trim() ?? null;
 }
 
-/** Nagłówek `X-Forwarded-For` z jednym, zaufanym adresem — do żądań BFF → serwis. */
-export function forwardedFor(headers: Headers): Record<string, string> {
+/**
+ * Nagłówek `X-Forwarded-For` z jednym, zaufanym adresem — do żądań BFF → serwis.
+ * Tylko przy `BFF_TRUST_PROXY=1`: bez proxy przed Next nagłówek pochodzi prosto od klienta
+ * i byłby podróbką. Wtedy nic nie wysyłamy — backend widzi IP serwera Next (wspólny limit,
+ * ale nie do obejścia).
+ */
+export function forwardedFor(
+  headers: Headers,
+  env: Record<string, string | undefined> = process.env,
+): Record<string, string> {
+  if (env.BFF_TRUST_PROXY !== "1") return {};
   const ip = clientIp(headers);
   return ip ? { "x-forwarded-for": ip } : {};
 }
