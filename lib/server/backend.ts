@@ -65,7 +65,10 @@ function refreshTokens(
   if (pending) return pending;
   const refresh = requestRefresh(fetchImpl, refreshUrl, refreshToken);
   refreshes.set(refreshToken, refresh);
-  const forget = () => refreshes.delete(refreshToken);
+  // kasujemy tylko własny wpis — timer nieudanej próby nie może usunąć udanej, nowszej
+  const forget = () => {
+    if (refreshes.get(refreshToken) === refresh) refreshes.delete(refreshToken);
+  };
   // błąd sieci nie zostaje w pamięci — następne żądanie spróbuje od nowa
   refresh.catch(forget);
   setTimeout(forget, REFRESH_REUSE_MS).unref?.();

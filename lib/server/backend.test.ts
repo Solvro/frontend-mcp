@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { clientIp, forwardWithRefresh, serviceUrl } from "./backend";
 
 type Call = { url: string; auth: string | null };
@@ -32,7 +32,12 @@ describe("serviceUrl", () => {
   });
 });
 
+// Pamięć rotacji w backend.ts żyje w module — każdy test używa własnego refresh tokenu.
 describe("forwardWithRefresh", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("forwards anonymously without tokens", async () => {
     const { impl, calls } = fakeFetch([new Response("ok")]);
     const result = await forwardWithRefresh({ ...base, fetchImpl: impl });
@@ -85,6 +90,25 @@ describe("forwardWithRefresh", () => {
     expect(calls.filter((c) => c.url === base.refreshUrl)).toHaveLength(1);
     expect(first.tokens).toEqual(rotated);
     expect(second.tokens).toEqual(rotated);
+  });
+
+  it("keeps a successful retry cached after the failed attempt's timer fires", async () => {
+    vi.useFakeTimers();
+    let refreshCalls = 0;
+    const impl = (async (input: RequestInfo | URL) => {
+      if (String(input) !== base.refreshUrl) return new Response("ok");
+      refreshCalls += 1;
+      if (refreshCalls === 1) throw new Error("ECONNREFUSED");
+      return Response.json(rotated);
+    }) as typeof fetch;
+    const options = { ...base, refreshToken: "r-retry-timer", fetchImpl: impl };
+    await expect(forwardWithRefresh(options)).rejects.toThrow();
+    await vi.advanceTimersByTimeAsync(20_000);
+    await forwardWithRefresh(options);
+    await vi.advanceTimersByTimeAsync(11_000); // pierwszy timer (30 s) już wystrzelił
+    const replay = await forwardWithRefresh(options);
+    expect(refreshCalls).toBe(2);
+    expect(replay.tokens).toEqual(rotated);
   });
 
   it("does not remember a refresh that failed on the network", async () => {
