@@ -28,7 +28,8 @@ export function writeTokens(
   res.cookies.set(REFRESH_COOKIE, tokens.refresh_token, { ...base, maxAge: REFRESH_MAX_AGE });
   if (!identity) return;
   res.cookies.set(EMAIL_COOKIE, identity.email, { ...base, maxAge: REFRESH_MAX_AGE });
-  if (identity.name) res.cookies.set(NAME_COOKIE, identity.name, { ...base, maxAge: REFRESH_MAX_AGE });
+  // bez nazwy kasujemy starą — inaczej zostałaby po poprzednim koncie w tej przeglądarce
+  res.cookies.set(NAME_COOKIE, identity.name ?? "", { ...base, maxAge: identity.name ? REFRESH_MAX_AGE : 0 });
 }
 
 export function clearTokens(res: NextResponse): void {
