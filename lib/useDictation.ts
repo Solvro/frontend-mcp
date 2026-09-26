@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 type SpeechResultEvent = {
   results: ArrayLike<ArrayLike<{ transcript: string }>>;
@@ -22,11 +22,19 @@ type SpeechWindow = Window & {
   webkitSpeechRecognition?: new () => SpeechRecognitionLike;
 };
 
+function recognitionClass() {
+  const w = window as SpeechWindow;
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition;
+}
+
+const noSubscribe = () => () => {};
+
 /**
- * Dyktowanie pytania przez Web Speech API. Tam, gdzie API nie ma
- * (Firefox, Safari < 16), przycisk mikrofonu tylko zmienia stan wizualny.
+ * Dyktowanie pytania przez Web Speech API. `supported` jest `false` tam, gdzie API nie ma
+ * (Firefox, Safari < 16) i na serwerze — wtedy przycisku mikrofonu w ogóle nie pokazujemy.
  */
 export function useDictation(onTranscript: (text: string) => void) {
+  const supported = useSyncExternalStore(noSubscribe, () => Boolean(recognitionClass()), () => false);
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const callbackRef = useRef(onTranscript);
@@ -36,8 +44,7 @@ export function useDictation(onTranscript: (text: string) => void) {
   }, [onTranscript]);
 
   useEffect(() => {
-    const w = window as SpeechWindow;
-    const Recognition = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+    const Recognition = recognitionClass();
     if (!Recognition) return;
 
     const recognition = new Recognition();
@@ -68,11 +75,7 @@ export function useDictation(onTranscript: (text: string) => void) {
   // wywołuje updater dwa razy, przez co start() leciał na już uruchomionej sesji.
   const toggle = useCallback(() => {
     const recognition = recognitionRef.current;
-
-    if (!recognition) {
-      setListening((wasListening) => !wasListening);
-      return;
-    }
+    if (!recognition) return;
 
     if (listening) {
       recognition.stop();
@@ -88,5 +91,5 @@ export function useDictation(onTranscript: (text: string) => void) {
     }
   }, [listening]);
 
-  return { listening, toggle };
+  return { supported, listening, toggle };
 }

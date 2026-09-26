@@ -34,7 +34,7 @@ function withBearer(init: RequestInit, token: string | undefined): RequestInit {
   return { ...init, headers };
 }
 
-async function refreshTokens(
+async function requestRefresh(
   fetchImpl: typeof fetch,
   refreshUrl: string,
   refreshToken: string,
@@ -46,6 +46,34 @@ async function refreshTokens(
     cache: "no-store",
   });
   return response.ok ? ((await response.json()) as TokenPair) : null;
+}
+
+/* auth-service rotuje refresh token i traktuje ponowne użycie starego jako kradzież
+   (revoke_family — wylogowanie wszędzie). Równoległe żądania z tym samym tokenem
+   (dwie karty, lista rozmów + historia) muszą więc dostać jedną rotację, a nie kilka.
+   Wynik zostaje chwilę dłużej dla żądań, które wystartowały jeszcze ze starym ciasteczkiem. */
+const REFRESH_REUSE_MS = 30_000;
+const refreshes = new Map<string, Promise<TokenPair | null>>();
+
+// ponytail: mapa w pamięci procesu — przy kilku instancjach BFF potrzebny wspólny lock (np. Redis).
+function refreshTokens(
+  fetchImpl: typeof fetch,
+  refreshUrl: string,
+  refreshToken: string,
+): Promise<TokenPair | null> {
+  const pending = refreshes.get(refreshToken);
+  if (pending) return pending;
+  const refresh = requestRefresh(fetchImpl, refreshUrl, refreshToken);
+  refreshes.set(refreshToken, refresh);
+  // kasujemy tylko własny wpis — timer nieudanej próby nie może usunąć udanej, nowszej
+  const forget = () => {
+    if (refreshes.get(refreshToken) === refresh) refreshes.delete(refreshToken);
+  };
+  /* Pamiętamy tylko udaną rotację. Odmowa (401) i błąd sieci znikają od razu: następne
+     żądanie spróbuje od nowa, a śmieciowe ciasteczka nie zapychają pamięci przez 30 s. */
+  refresh.then((tokens) => tokens ?? forget(), forget);
+  setTimeout(forget, REFRESH_REUSE_MS).unref?.();
+  return refresh;
 }
 
 function expired(): ForwardResult {
@@ -88,4 +116,30 @@ export async function forwardWithRefresh({
   response = await fetchImpl(url, withBearer(init, tokens.access_token));
   if (response.status === 401) return expired();
   return { response, tokens, expired: false };
+}
+
+/**
+ * IP klienta dla limitów w backendzie (limit pytań anonimowych, logowania). Next nie zna
+ * adresu gniazda — podaje go proxy/hosting przed BFF. Proxy *dopisuje* adres na końcu
+ * `X-Forwarded-For`, więc wcześniejsze wpisy ustawił sam klient; bierzemy tylko ostatni,
+ * inaczej dowolny nagłówek od klienta omijałby limit.
+ */
+export function clientIp(headers: Headers): string | null {
+  const chain = headers.get("x-forwarded-for")?.split(",").map((part) => part.trim()).filter(Boolean);
+  return chain?.at(-1) ?? headers.get("x-real-ip")?.trim() ?? null;
+}
+
+/**
+ * Nagłówek `X-Forwarded-For` z jednym, zaufanym adresem — do żądań BFF → serwis.
+ * Tylko przy `BFF_TRUST_PROXY=1`: bez proxy przed Next nagłówek pochodzi prosto od klienta
+ * i byłby podróbką. Wtedy nic nie wysyłamy — backend widzi IP serwera Next (wspólny limit,
+ * ale nie do obejścia).
+ */
+export function forwardedFor(
+  headers: Headers,
+  env: Record<string, string | undefined> = process.env,
+): Record<string, string> {
+  if (env.BFF_TRUST_PROXY !== "1") return {};
+  const ip = clientIp(headers);
+  return ip ? { "x-forwarded-for": ip } : {};
 }

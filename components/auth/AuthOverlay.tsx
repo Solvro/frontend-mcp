@@ -236,6 +236,10 @@ export function AuthOverlay({ trigger, onClosed }: AuthOverlayProps) {
       ref={dialogRef}
       className={styles.overlay}
       aria-labelledby="gw-auth-heading"
+      // Escape zamyka tylko ten ekran — nie może dojść do szuflady historii pod spodem
+      onKeyDown={(event) => {
+        if (event.key === "Escape") event.stopPropagation();
+      }}
       onCancel={(event) => {
         event.preventDefault();
         void close();

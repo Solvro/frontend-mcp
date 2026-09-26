@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { forwardWithRefresh, serviceUrl } from "@/lib/server/backend";
-import { ACCESS_COOKIE, REFRESH_COOKIE, clearTokens, relay, writeTokens } from "@/lib/server/session";
+import { forwardWithRefresh, forwardedFor, serviceUrl } from "@/lib/server/backend";
+import { ACCESS_COOKIE, REFRESH_COOKIE, clearTokens, relay, upstreamUnavailable, writeTokens } from "@/lib/server/session";
 
 type Context = { params: Promise<{ path: string[] }> };
 
@@ -16,10 +16,8 @@ async function handle(request: NextRequest, { params }: Context) {
 
   const hasBody = request.method !== "GET" && request.method !== "DELETE";
   const body = hasBody ? await request.text() : undefined;
-  const headers = new Headers({ accept: "application/json" });
+  const headers = new Headers({ accept: "application/json", ...forwardedFor(request.headers) });
   if (body) headers.set("content-type", "application/json");
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) headers.set("x-forwarded-for", forwardedFor);
 
   const { response, tokens, expired } = await forwardWithRefresh({
     url: `${serviceUrl("chat")}/${target}${request.nextUrl.search}`,
@@ -35,6 +33,8 @@ async function handle(request: NextRequest, { params }: Context) {
   return out;
 }
 
-export const GET = handle;
-export const POST = handle;
-export const DELETE = handle;
+const safe = (request: NextRequest, context: Context) => handle(request, context).catch(upstreamUnavailable);
+
+export const GET = safe;
+export const POST = safe;
+export const DELETE = safe;

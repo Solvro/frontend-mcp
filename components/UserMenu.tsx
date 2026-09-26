@@ -29,6 +29,7 @@ export function UserMenu({ email, name: accountName, onLogout }: UserMenuProps) 
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      event.preventDefault(); // Escape zamyka tylko menu, nie całą szufladę
       setOpen(false);
       triggerRef.current?.focus();
     };

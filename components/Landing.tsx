@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { startTransition, useCallback, useState } from "react";
+import { startTransition, useCallback, useRef, useState } from "react";
 import { AuthOverlay } from "./auth/AuthOverlay";
 import { ChatThread } from "./ChatThread";
 import { Composer } from "./Composer";
@@ -11,6 +11,7 @@ import { Scene } from "./Scene";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { api } from "@/lib/api/client";
+import { ApiError } from "@/lib/api/problem";
 import { SUGGESTIONS } from "@/lib/data";
 import { useAuth } from "@/lib/useAuth";
 import { useChat } from "@/lib/useChat";
@@ -47,7 +48,7 @@ export function Landing() {
   const email = auth.status === "authenticated" ? auth.email : null;
   const name = auth.status === "authenticated" ? auth.name : null;
 
-  const conversations = useConversations(auth.status === "authenticated");
+  const conversations = useConversations(auth.status === "authenticated", auth.markExpired);
   // Nowa rozmowa dostaje tytuł dopiero po pierwszej odpowiedzi, więc lista odświeża się wtedy.
   const chat = useChat({ onAnswer: conversations.refresh, onUnauthorized: auth.markExpired });
   /** Limit pytań wyczerpany — do kiedy (epoch ms); `null`, gdy okienko otwarte. */
@@ -57,7 +58,13 @@ export function Landing() {
      w ogóle nie rusza, zamiast wskoczyć w rozmowę i od razu z niej wyskoczyć. */
   const [holdLanding, setHoldLanding] = useState(false);
   const hasConversation = (chat.messages.length > 0 || chat.pending) && !holdLanding;
-  const { listening, toggle: toggleListening } = useDictation(setQuestion);
+  /* Dyktowanie dopisuje się do tego, co już było w polu, zamiast to nadpisywać. */
+  const dictationBase = useRef("");
+  const dictation = useDictation((text) => setQuestion(`${dictationBase.current}${text}`));
+  const toggleListening = () => {
+    if (!dictation.listening) dictationBase.current = question.trim() ? `${question.trimEnd()} ` : "";
+    dictation.toggle();
+  };
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const incoming = Array.from(files).map(toAttachment);
@@ -111,6 +118,7 @@ export function Landing() {
   };
 
   const closeLogin = useCallback(() => setAuthTrigger(null), []);
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
   return (
     <div className={styles.shell}>
@@ -126,8 +134,9 @@ export function Landing() {
           setStatus(null);
           try {
             await api.deleteSession(id);
-          } catch {
-            setStatus("Nie udało się usunąć rozmowy. Spróbuj ponownie.");
+          } catch (cause) {
+            if (cause instanceof ApiError && cause.status === 401) auth.markExpired();
+            else setStatus("Nie udało się usunąć rozmowy. Spróbuj ponownie.");
             return;
           }
           // Otwarta rozmowa właśnie zniknęła z bazy — ekran wraca na stronę główną.
@@ -140,10 +149,10 @@ export function Landing() {
         name={name}
         isAuthenticated={auth.status !== "anonymous"}
         isDrawerOpen={drawerOpen}
-        onCloseDrawer={() => setDrawerOpen(false)}
+        onCloseDrawer={closeDrawer}
       />
 
-      <div className={styles.main}>
+      <div className={styles.main} inert={drawerOpen}>
         <Topbar
           showLogin={auth.status === "anonymous"}
           lockedUntil={lockedUntil}
@@ -218,8 +227,8 @@ export function Landing() {
               onAddFiles={addFiles}
               onRemoveAttachment={removeAttachment}
               onSend={handleSend}
-              listening={listening}
-              onToggleListening={toggleListening}
+              listening={dictation.listening}
+              onToggleListening={dictation.supported ? toggleListening : undefined}
               disabled={chat.pending || lockedUntil !== null}
               disabledHint={lockedUntil !== null ? "Limit pytań wyczerpany" : undefined}
               attachmentsEnabled={false}
