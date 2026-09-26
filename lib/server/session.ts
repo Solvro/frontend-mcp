@@ -58,3 +58,12 @@ export async function relay(response: Response): Promise<NextResponse> {
   const body = response.status === 204 ? null : await response.arrayBuffer();
   return new NextResponse(body, { status: response.status, headers });
 }
+
+/** Serwis nie odpowiedział (sieć, zły JSON) — problem+json zamiast strony błędu Next. */
+export function upstreamUnavailable(cause: unknown): NextResponse {
+  console.error("[bff] upstream request failed", cause);
+  return NextResponse.json(
+    { type: "about:blank", title: "Bad Gateway", status: 502, detail: "upstream_unavailable" },
+    { status: 502 },
+  );
+}

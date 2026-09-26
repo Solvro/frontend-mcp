@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { forwardWithRefresh, forwardedFor, serviceUrl } from "@/lib/server/backend";
-import { ACCESS_COOKIE, REFRESH_COOKIE, clearTokens, relay, writeTokens } from "@/lib/server/session";
+import { ACCESS_COOKIE, REFRESH_COOKIE, clearTokens, relay, upstreamUnavailable, writeTokens } from "@/lib/server/session";
 
 type Context = { params: Promise<{ path: string[] }> };
 
@@ -33,6 +33,8 @@ async function handle(request: NextRequest, { params }: Context) {
   return out;
 }
 
-export const GET = handle;
-export const POST = handle;
-export const DELETE = handle;
+const safe = (request: NextRequest, context: Context) => handle(request, context).catch(upstreamUnavailable);
+
+export const GET = safe;
+export const POST = safe;
+export const DELETE = safe;

@@ -7,6 +7,7 @@ import {
   REFRESH_COOKIE,
   clearTokens,
   relay,
+  upstreamUnavailable,
   writeTokens,
 } from "@/lib/server/session";
 
@@ -38,7 +39,7 @@ async function fetchUsername(auth: string, access: string): Promise<string | nul
   return profile?.username?.trim() || null;
 }
 
-export async function POST(request: NextRequest, { params }: Context) {
+async function handlePost(request: NextRequest, { params }: Context) {
   const { action } = await params;
   const auth = `${serviceUrl("auth")}/auth`;
 
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest, { params }: Context) {
   return notFound();
 }
 
-export async function GET(request: NextRequest, { params }: Context) {
+async function handleGet(request: NextRequest, { params }: Context) {
   const { action } = await params;
 
   if (action === "session") {
@@ -105,3 +106,7 @@ export async function GET(request: NextRequest, { params }: Context) {
 
   return notFound();
 }
+
+export const POST = (request: NextRequest, context: Context) =>
+  handlePost(request, context).catch(upstreamUnavailable);
+export const GET = (request: NextRequest, context: Context) => handleGet(request, context).catch(upstreamUnavailable);
