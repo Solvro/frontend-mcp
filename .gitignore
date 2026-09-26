@@ -44,3 +44,7 @@ next-env.d.ts
 .playwright-mcp/
 
 !.env.example
+
+# lokalne narzędzia agentów (graphify, superpowers) — generowane per maszyna
+graphify-out/
+.superpowers/
