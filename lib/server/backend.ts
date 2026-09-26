@@ -34,7 +34,7 @@ function withBearer(init: RequestInit, token: string | undefined): RequestInit {
   return { ...init, headers };
 }
 
-async function refreshTokens(
+async function requestRefresh(
   fetchImpl: typeof fetch,
   refreshUrl: string,
   refreshToken: string,
@@ -46,6 +46,30 @@ async function refreshTokens(
     cache: "no-store",
   });
   return response.ok ? ((await response.json()) as TokenPair) : null;
+}
+
+/* auth-service rotuje refresh token i traktuje ponowne użycie starego jako kradzież
+   (revoke_family — wylogowanie wszędzie). Równoległe żądania z tym samym tokenem
+   (dwie karty, lista rozmów + historia) muszą więc dostać jedną rotację, a nie kilka.
+   Wynik zostaje chwilę dłużej dla żądań, które wystartowały jeszcze ze starym ciasteczkiem. */
+const REFRESH_REUSE_MS = 30_000;
+const refreshes = new Map<string, Promise<TokenPair | null>>();
+
+// ponytail: mapa w pamięci procesu — przy kilku instancjach BFF potrzebny wspólny lock (np. Redis).
+function refreshTokens(
+  fetchImpl: typeof fetch,
+  refreshUrl: string,
+  refreshToken: string,
+): Promise<TokenPair | null> {
+  const pending = refreshes.get(refreshToken);
+  if (pending) return pending;
+  const refresh = requestRefresh(fetchImpl, refreshUrl, refreshToken);
+  refreshes.set(refreshToken, refresh);
+  const forget = () => refreshes.delete(refreshToken);
+  // błąd sieci nie zostaje w pamięci — następne żądanie spróbuje od nowa
+  refresh.catch(forget);
+  setTimeout(forget, REFRESH_REUSE_MS).unref?.();
+  return refresh;
 }
 
 function expired(): ForwardResult {

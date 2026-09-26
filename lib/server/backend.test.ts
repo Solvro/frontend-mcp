@@ -42,13 +42,13 @@ describe("forwardWithRefresh", () => {
 
   it("attaches the access token", async () => {
     const { impl, calls } = fakeFetch([new Response("ok")]);
-    await forwardWithRefresh({ ...base, accessToken: "a1", refreshToken: "r1", fetchImpl: impl });
+    await forwardWithRefresh({ ...base, accessToken: "a1", refreshToken: "r-attach", fetchImpl: impl });
     expect(calls[0].auth).toBe("Bearer a1");
   });
 
   it("refreshes first when only the refresh token is left", async () => {
     const { impl, calls } = fakeFetch([Response.json(rotated), new Response("ok")]);
-    const result = await forwardWithRefresh({ ...base, refreshToken: "r1", fetchImpl: impl });
+    const result = await forwardWithRefresh({ ...base, refreshToken: "r-first", fetchImpl: impl });
     expect(calls.map((c) => c.url)).toEqual([base.refreshUrl, base.url]);
     expect(calls[1].auth).toBe("Bearer new-access");
     expect(result.tokens).toEqual(rotated);
@@ -56,7 +56,7 @@ describe("forwardWithRefresh", () => {
 
   it("retries once after 401 with rotated tokens", async () => {
     const { impl, calls } = fakeFetch([unauthorized(), Response.json(rotated), new Response("ok")]);
-    const result = await forwardWithRefresh({ ...base, accessToken: "old", refreshToken: "r1", fetchImpl: impl });
+    const result = await forwardWithRefresh({ ...base, accessToken: "old", refreshToken: "r-retry", fetchImpl: impl });
     expect(calls.map((c) => c.auth)).toEqual(["Bearer old", null, "Bearer new-access"]);
     expect(result.response.status).toBe(200);
     expect(result.tokens).toEqual(rotated);
@@ -64,7 +64,7 @@ describe("forwardWithRefresh", () => {
 
   it("reports an expired session when refresh fails", async () => {
     const { impl } = fakeFetch([unauthorized(), unauthorized()]);
-    const result = await forwardWithRefresh({ ...base, accessToken: "old", refreshToken: "r1", fetchImpl: impl });
+    const result = await forwardWithRefresh({ ...base, accessToken: "old", refreshToken: "r-fail", fetchImpl: impl });
     expect(result.expired).toBe(true);
     expect(result.response.status).toBe(401);
     expect(await result.response.json()).toMatchObject({ detail: "session_expired" });
@@ -74,5 +74,29 @@ describe("forwardWithRefresh", () => {
     const { impl } = fakeFetch([unauthorized()]);
     const result = await forwardWithRefresh({ ...base, accessToken: "old", fetchImpl: impl });
     expect(result.expired).toBe(true);
+  });
+
+  it("shares one rotation between concurrent requests with the same refresh token", async () => {
+    const { impl, calls } = fakeFetch([Response.json(rotated), new Response("a"), new Response("b")]);
+    const [first, second] = await Promise.all([
+      forwardWithRefresh({ ...base, refreshToken: "r-shared", fetchImpl: impl }),
+      forwardWithRefresh({ ...base, refreshToken: "r-shared", fetchImpl: impl }),
+    ]);
+    expect(calls.filter((c) => c.url === base.refreshUrl)).toHaveLength(1);
+    expect(first.tokens).toEqual(rotated);
+    expect(second.tokens).toEqual(rotated);
+  });
+
+  it("does not remember a refresh that failed on the network", async () => {
+    let attempts = 0;
+    const impl = (async (input: RequestInfo | URL) => {
+      if (String(input) !== base.refreshUrl) return new Response("ok");
+      attempts += 1;
+      if (attempts === 1) throw new Error("ECONNREFUSED");
+      return Response.json(rotated);
+    }) as typeof fetch;
+    await expect(forwardWithRefresh({ ...base, refreshToken: "r-flaky", fetchImpl: impl })).rejects.toThrow();
+    const result = await forwardWithRefresh({ ...base, refreshToken: "r-flaky", fetchImpl: impl });
+    expect(result.tokens).toEqual(rotated);
   });
 });
