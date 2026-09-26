@@ -9,6 +9,10 @@ services:
       NODE_ENV: production
       AUTH_SERVICE_URL: http://auth-service:8000
       CHAT_SERVICE_URL: http://chat-service:8000
+      # The only way in is the backend's nginx, which sends X-Forwarded-For with exactly one,
+      # trusted address; without this the BFF forwards none and every visitor shares one
+      # rate-limit bucket (the frontend's own 10.89.0.11). See .env.example.
+      BFF_TRUST_PROXY: "1"
     restart: unless-stopped
     read_only: true
     tmpfs: [/tmp, /app/.next/cache]
