@@ -11,6 +11,7 @@ import { Scene } from "./Scene";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { api } from "@/lib/api/client";
+import { ApiError } from "@/lib/api/problem";
 import { SUGGESTIONS } from "@/lib/data";
 import { useAuth } from "@/lib/useAuth";
 import { useChat } from "@/lib/useChat";
@@ -47,7 +48,7 @@ export function Landing() {
   const email = auth.status === "authenticated" ? auth.email : null;
   const name = auth.status === "authenticated" ? auth.name : null;
 
-  const conversations = useConversations(auth.status === "authenticated");
+  const conversations = useConversations(auth.status === "authenticated", auth.markExpired);
   // Nowa rozmowa dostaje tytuł dopiero po pierwszej odpowiedzi, więc lista odświeża się wtedy.
   const chat = useChat({ onAnswer: conversations.refresh, onUnauthorized: auth.markExpired });
   /** Limit pytań wyczerpany — do kiedy (epoch ms); `null`, gdy okienko otwarte. */
@@ -132,8 +133,9 @@ export function Landing() {
           setStatus(null);
           try {
             await api.deleteSession(id);
-          } catch {
-            setStatus("Nie udało się usunąć rozmowy. Spróbuj ponownie.");
+          } catch (cause) {
+            if (cause instanceof ApiError && cause.status === 401) auth.markExpired();
+            else setStatus("Nie udało się usunąć rozmowy. Spróbuj ponownie.");
             return;
           }
           // Otwarta rozmowa właśnie zniknęła z bazy — ekran wraca na stronę główną.
