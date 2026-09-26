@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { forwardedFor, serviceUrl, type TokenPair } from "@/lib/server/backend";
+import { forwardWithRefresh, forwardedFor, serviceUrl, type TokenPair } from "@/lib/server/backend";
 import {
   ACCESS_COOKIE,
   EMAIL_COOKIE,
@@ -56,12 +56,23 @@ export async function POST(request: NextRequest, { params }: Context) {
 
   if (action === "logout") {
     const access = request.cookies.get(ACCESS_COOKIE)?.value;
-    const refresh = request.cookies.get(REFRESH_COOKIE)?.value ?? null;
-    if (access) {
-      // Wylogowanie lokalne ma się udać nawet przy niedostępnym backendzie.
-      await postJson(`${auth}/logout`, JSON.stringify({ refresh_token: refresh }), {
-        ...forwardedFor(request.headers),
-        authorization: `Bearer ${access}`,
+    const refresh = request.cookies.get(REFRESH_COOKIE)?.value;
+    if (access || refresh) {
+      /* Po 29 min access cookie już nie ma, a /auth/logout wymaga Bearer — bez odświeżenia
+         refresh token zostałby ważny w backendzie jeszcze 7 dni. Stary refresh w body
+         wystarcza: backend unieważnia całą rodzinę, łącznie z tokenem z tej rotacji.
+         Wylogowanie lokalne ma się udać nawet przy niedostępnym backendzie. */
+      await forwardWithRefresh({
+        url: `${auth}/logout`,
+        init: {
+          method: "POST",
+          headers: { "content-type": "application/json", ...forwardedFor(request.headers) },
+          body: JSON.stringify({ refresh_token: refresh ?? null }),
+          cache: "no-store",
+        },
+        accessToken: access,
+        refreshToken: refresh,
+        refreshUrl: `${auth}/refresh`,
       }).catch(() => undefined);
     }
     const out = new NextResponse(null, { status: 204 });
