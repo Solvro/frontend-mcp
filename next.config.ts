@@ -25,6 +25,8 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   // mikrofon tylko dla dyktowania na własnej stronie
   { key: "Permissions-Policy", value: "camera=(), geolocation=(), microphone=(self)" },
+  // tylko w prod — HSTS na http://localhost zablokowałby dev na tej domenie
+  ...(isDev ? [] : [{ key: "Strict-Transport-Security", value: "max-age=63072000" }]),
 ];
 
 const nextConfig: NextConfig = {
