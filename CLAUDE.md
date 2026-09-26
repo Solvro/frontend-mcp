@@ -35,7 +35,7 @@ npx tsc --noEmit
   załączniki z drag&drop i usuwaniem
 - `components/Sidebar.tsx` — historia rozmów (z backendu przez `lib/useConversations.ts`),
   wyszukiwarka, zamykany popup logowania; poniżej 1024 px zmienia się w szufladę
-- `lib/useDictation.ts` — dyktowanie przez Web Speech API (`pl-PL`), z cichym fallbackiem
+- `lib/useDictation.ts` — dyktowanie przez Web Speech API (`pl-PL`); bez API mikrofon jest ukryty
 
 ## Zasoby w repo
 

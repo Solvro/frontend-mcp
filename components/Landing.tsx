@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { startTransition, useCallback, useState } from "react";
+import { startTransition, useCallback, useRef, useState } from "react";
 import { AuthOverlay } from "./auth/AuthOverlay";
 import { ChatThread } from "./ChatThread";
 import { Composer } from "./Composer";
@@ -57,7 +57,13 @@ export function Landing() {
      w ogóle nie rusza, zamiast wskoczyć w rozmowę i od razu z niej wyskoczyć. */
   const [holdLanding, setHoldLanding] = useState(false);
   const hasConversation = (chat.messages.length > 0 || chat.pending) && !holdLanding;
-  const { listening, toggle: toggleListening } = useDictation(setQuestion);
+  /* Dyktowanie dopisuje się do tego, co już było w polu, zamiast to nadpisywać. */
+  const dictationBase = useRef("");
+  const dictation = useDictation((text) => setQuestion(`${dictationBase.current}${text}`));
+  const toggleListening = () => {
+    if (!dictation.listening) dictationBase.current = question.trim() ? `${question.trimEnd()} ` : "";
+    dictation.toggle();
+  };
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const incoming = Array.from(files).map(toAttachment);
@@ -218,8 +224,8 @@ export function Landing() {
               onAddFiles={addFiles}
               onRemoveAttachment={removeAttachment}
               onSend={handleSend}
-              listening={listening}
-              onToggleListening={toggleListening}
+              listening={dictation.listening}
+              onToggleListening={dictation.supported ? toggleListening : undefined}
               disabled={chat.pending || lockedUntil !== null}
               disabledHint={lockedUntil !== null ? "Limit pytań wyczerpany" : undefined}
               attachmentsEnabled={false}
