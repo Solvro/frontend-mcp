@@ -149,7 +149,7 @@ export function Landing() {
         onCloseDrawer={() => setDrawerOpen(false)}
       />
 
-      <div className={styles.main}>
+      <div className={styles.main} inert={drawerOpen}>
         <Topbar
           showLogin={auth.status === "anonymous"}
           lockedUntil={lockedUntil}
