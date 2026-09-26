@@ -118,6 +118,7 @@ export function Landing() {
   };
 
   const closeLogin = useCallback(() => setAuthTrigger(null), []);
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
   return (
     <div className={styles.shell}>
@@ -148,7 +149,7 @@ export function Landing() {
         name={name}
         isAuthenticated={auth.status !== "anonymous"}
         isDrawerOpen={drawerOpen}
-        onCloseDrawer={() => setDrawerOpen(false)}
+        onCloseDrawer={closeDrawer}
       />
 
       <div className={styles.main} inert={drawerOpen}>
