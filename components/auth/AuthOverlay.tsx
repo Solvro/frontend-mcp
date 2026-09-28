@@ -369,7 +369,8 @@ export function AuthOverlay({ trigger, onClosed }: AuthOverlayProps) {
                             type={showPassword ? "text" : "password"}
                             value={password}
                             onChange={(event) => setPassword(event.target.value)}
-                            minLength={mode === "register" ? 6 : undefined}
+                            minLength={mode === "register" ? 8 : undefined}
+                            maxLength={mode === "register" ? 128 : undefined}
                             autoComplete={mode === "register" ? "new-password" : "current-password"}
                             aria-describedby={mode === "register" ? "gw-auth-password-hint" : undefined}
                             required
@@ -386,7 +387,7 @@ export function AuthOverlay({ trigger, onClosed }: AuthOverlayProps) {
                         </div>
                         {mode === "register" && (
                           <p id="gw-auth-password-hint" className={styles.hint}>
-                            Co najmniej 6 znaków.
+                            Od 8 do 128 znaków. Najlepiej kilka słów — długość chroni lepiej niż znaki specjalne.
                           </p>
                         )}
                       </div>

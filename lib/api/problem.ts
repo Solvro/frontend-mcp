@@ -19,6 +19,7 @@ const MESSAGES: Record<string, string> = {
   session_expired: "Sesja wygasła — zaloguj się ponownie.",
   "Session not found.": "Ta rozmowa wygasła — wyślij pytanie jeszcze raz, zacznę nową.",
   network_error: "Brak połączenia z serwerem.",
+  weak_password: "Hasło musi mieć od 8 do 128 znaków.",
 };
 
 function codeFromDetail(detail: unknown): string {
@@ -34,6 +35,10 @@ function codeFromDetail(detail: unknown): string {
 
 function messageFor(status: number, code: string, retryAfter: number | null): string {
   if (MESSAGES[code]) return MESSAGES[code];
+  if (code === "too_many_login_attempts") {
+    const minutes = Math.max(1, Math.ceil((retryAfter ?? 900) / 60));
+    return `Za dużo nieudanych prób logowania — spróbuj ponownie za ${minutes} min.`;
+  }
   if (status === 429) {
     return retryAfter === null
       ? "Limit pytań wyczerpany — spróbuj ponownie później."
