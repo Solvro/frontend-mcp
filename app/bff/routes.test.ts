@@ -22,7 +22,8 @@ function stubFetch(handler: (url: string) => Response | Promise<Response>) {
 }
 
 function request(path: string, init: { method?: string; body?: string; headers?: Record<string, string> } = {}) {
-  return new NextRequest(`http://localhost:3000${path}`, init);
+  const headers = { "content-type": "application/json", ...init.headers };
+  return new NextRequest(`http://localhost:3000${path}`, { ...init, headers });
 }
 
 const authCtx = (action: string) => ({ params: Promise.resolve({ action }) });
@@ -120,5 +121,86 @@ describe("auth routes", () => {
       authCtx("login"),
     );
     expect(response.status).toBe(502);
+  });
+
+  const failedLogin = (email: string, ip: string) =>
+    authRoute.POST(
+      request("/bff/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password: "guess" }),
+        headers: { "x-forwarded-for": ip },
+      }),
+      authCtx("login"),
+    );
+
+  it("blocks only the guessing IP, not the account owner", async () => {
+    stubFetch(() => Response.json({ detail: "invalid_credentials" }, { status: 401 }));
+    for (let i = 0; i < 5; i++) expect((await failedLogin("owner@pwr.edu.pl", "203.0.113.66")).status).toBe(401);
+
+    const locked = await failedLogin("owner@pwr.edu.pl", "203.0.113.66");
+    expect(locked.status).toBe(429);
+    expect(Number(locked.headers.get("retry-after"))).toBeGreaterThan(0);
+    expect((await failedLogin("owner@pwr.edu.pl", "198.51.100.1")).status).toBe(401);
+  });
+
+  it("locks an account under a guessing attack spread over many IPs", async () => {
+    stubFetch(() => Response.json({ detail: "invalid_credentials" }, { status: 401 }));
+    for (let i = 0; i < 50; i++) expect((await failedLogin("victim@pwr.edu.pl", `10.0.${i}.1`)).status).toBe(401);
+
+    expect((await failedLogin("victim@pwr.edu.pl", "10.9.9.9")).status).toBe(429);
+    expect(calls).toHaveLength(50);
+  });
+
+  it("counts a parallel burst and Unicode spellings of one account together", async () => {
+    stubFetch(() => Response.json({ detail: "invalid_credentials" }, { status: 401 }));
+    // full-width domena — backend sprowadza ją do tego samego konta
+    const spellings = ["burst@pwr.edu.pl", " BURST@pwr.edu.pl", "burst@ｐｗｒ.edu.pl"];
+    const responses = await Promise.all(
+      Array.from({ length: 20 }, (_, i) =>
+        authRoute.POST(
+          request("/bff/auth/login", {
+            method: "POST",
+            body: JSON.stringify({ email: spellings[i % spellings.length], password: "guess" }),
+          }),
+          authCtx("login"),
+        ),
+      ),
+    );
+    expect(responses.filter((response) => response.status === 429)).toHaveLength(15);
+    expect(calls).toHaveLength(5);
+  });
+
+  it("rejects non-JSON auth posts, which a cross-site form could send", async () => {
+    stubFetch(() => Response.json({}));
+    const response = await authRoute.POST(
+      request("/bff/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email: "a@pwr.edu.pl", password: "attacker-pass" }),
+        headers: { "content-type": "text/plain" },
+      }),
+      authCtx("login"),
+    );
+    expect(response.status).toBe(415);
+    expect(calls).toHaveLength(0);
+  });
+
+  it("does not let a forged client IP header mint fresh counters", async () => {
+    stubFetch(() => Response.json({ detail: "invalid_credentials" }, { status: 401 }));
+    for (let i = 0; i < 5; i++) await failedLogin("forged@pwr.edu.pl", `not-an-ip-${i}`);
+    expect((await failedLogin("forged@pwr.edu.pl", "still-not-an-ip")).status).toBe(429);
+  });
+
+  it.each([
+    ["register", { username: "ala", email: "a@pwr.edu.pl", password: "short" }],
+    ["reset-password", { token: "t", new_password: "x".repeat(129) }],
+  ])("rejects a weak password on %s before calling the service", async (action, body) => {
+    stubFetch(() => Response.json({}));
+    const response = await authRoute.POST(
+      request(`/bff/auth/${action}`, { method: "POST", body: JSON.stringify(body) }),
+      authCtx(action),
+    );
+    expect(response.status).toBe(422);
+    expect(await response.json()).toEqual({ detail: "weak_password" });
+    expect(calls).toHaveLength(0);
   });
 });
